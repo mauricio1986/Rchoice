@@ -343,6 +343,7 @@ if (!is.null(start)){
  }
  
  #Ordered Model
+ ## FIXMEE: see sandiwch
  if (link == "ordered probit" || link == "ordered logit"){
    J <- length(levels(y))
    kappas <- cumsum(c(exp(x$estimate[1:(J - 2)])))
