@@ -113,8 +113,8 @@ individuals,} \item{residuals}{the residuals,}
 \item{call}{the matched call.}
 }
 \description{
-Estimation of discrete choice models such as binary (logit
-and probit), poisson and ordered (logit and probit) model
+Estimation of discrete choice models such as Binary (logit
+and probit), Poisson and Ordered (logit and probit) model
 with random coefficients for cross-section data by
 simulated maximum likelihood
 }

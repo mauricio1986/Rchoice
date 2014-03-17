@@ -1,5 +1,6 @@
 Package: Rchoice
-Title: Discrete Choice Models with Random Parameters
+Title: Discrete Choice (Binary, Poisson and Ordered) Models with Random
+    Parameters
 Version: 0.1
 Author: Mauricio Sarrias <msarrias86@gmail.com>
 Maintainer: Mauricio Sarrias <msarrias86@gmail.com>
