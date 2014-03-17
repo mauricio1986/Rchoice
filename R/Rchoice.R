@@ -1,7 +1,7 @@
 #' Estimate discrete choice model with random parameters
 #' 
-#' Estimation of discrete choice models such as binary (logit and probit), 
-#' poisson and ordered (logit and probit) model with random coefficients for cross-section data by simulated maximum likelihood
+#' Estimation of discrete choice models such as Binary (logit and probit), 
+#' Poisson and Ordered (logit and probit) model with random coefficients for cross-section data by simulated maximum likelihood
 #' 
 #' @param x,object,obj and object of class \code{Rchoice},
 #' @param formula a symbolic description of the model to be estimated,
