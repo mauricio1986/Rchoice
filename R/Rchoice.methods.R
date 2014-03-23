@@ -23,12 +23,12 @@ vcov.Rchoice <- function(object,...)
 {
 # FIXME: See what happens when tyring linear hyp with kappas  
   H<-object$logLik$hessian
-  if(object$link=="ordered probit" || object$link=="ordered logit"){
+  if(object$link == "ordered probit" || object$link == "ordered logit"){
     bhat  <- coef(object)
-    J     <- length(attr(object$coefficients, "kappas"))
-    ahat  <- bhat[1:J]
+    ahat  <- attr(object$coefficients, "alphas")
+    J     <- length(ahat)
     A     <- diag(length(bhat))
-    z.id  <- seq(1,J,1)
+    z.id  <- seq(1, J, 1)
     Jacob <- jacobian(ahat)
     A[z.id, z.id] <- Jacob
     vcov <- A %*% solve(-H) %*% t(A)
@@ -74,6 +74,7 @@ df.residual.Rchoice <- function(object, ...){
 
 #' @rdname Rchoice
 #' @S3method update Rchoice
+#' @method update Rchoice
 #' @export
 update.Rchoice <- function (object, new, ...){
   call <- object$call
@@ -181,8 +182,9 @@ estfun.Rchoice <- function( x, ... ) {
   return(x$logLik$gradientObs )
 }
 
-
+#' @rdname Rchoice
 #' @S3method print Rchoice
+#' @method print Rchoice
 #' @export
 print.Rchoice <- function(x, digits = max(3,getOption("digits")-3),
                           width = getOption("width"),...)
@@ -201,85 +203,50 @@ print.Rchoice <- function(x, digits = max(3,getOption("digits")-3),
 #' @method summary Rchoice
 #' @export
 summary.Rchoice <- function (object,...){
-  if(object$link=="probit" || object$link=="logit" || object$link=="poisson" ){
-    b <- object$coefficients
-    std.err <- sqrt(diag(vcov(object)))
-  }else{
-    b<-attr(object$coefficients, "fixed")
-    std.err <- sqrt(diag(vcov(object)))[names(attr(object$coefficients, "fixed"))]
-  }
+  b <- object$coefficients
+  std.err <- sqrt(diag(vcov(object)))
   z <- b / std.err
   p <- 2 * (1 - pnorm(abs(z)))
   CoefTable <- cbind(b, std.err, z, p)
   colnames(CoefTable) <- c("Estimate", "Std. Error", "t-value", "Pr(>|t|)")
+  object$CoefTable    <- CoefTable
   
-  et <- object$time[3]
-  s <- round(et,0)
-  h <- s%/%3600
-  s <- s-3600*h
-  m <- s%/%60
-  s <- s-60*m
-  
-  result <- structure(
-    list(
-      CoefTable     = CoefTable,
-      link          = object$link,
-      mf            = object$mf,
-      logLik        = object$logLik,
-      formula       = object$formula,
-      time          = object$time,
-      freq          = object$freq,
-      call          = object$call,
-      draws         = object$draws,
-      R.model       = object$R.model,
-      R             = object$R,
-      tstr          = paste(h, "h:", m, "m:", s, "s", sep="")),
-    class = c("summary.Rchoice","Rchoice")
-  )
-  
-  if(object$link =="ordered probit" || object$link =="ordered logit") result$kappa<-attr(object$coefficients,"kappas")
-  return(result)
+  class(object) <- c("summary.Rchoice","Rchoice")
+  return(object)
 }
 
 
 ##' @S3method print summary.Rchoice
-print.summary.Rchoice<- function(x,digits = max(3, getOption("digits") - 2),
+print.summary.Rchoice<- function(x, digits = max(3, getOption("digits") - 2),
                                  width = getOption("width"),
                                  ...)
 {
-  cat(paste("\nModel:",x$link))
-  cat(paste("\nModel estimated on:",format(Sys.time(), "%a %b %d %X %Y"),"\n"))
+  cat(paste("\nModel:", x$link))
+  cat(paste("\nModel estimated on:", format(Sys.time(), "%a %b %d %X %Y"), "\n"))
   cat("\nCall:\n")
   cat(paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
   
-  if(!(x$link=="poisson")){
+  if(!(x$link == "poisson")){
     cat("\nFrecuencies of categories:\n")
-    print(prop.table(x$freq),digits = digits)
+    print(prop.table(x$freq), digits = digits)
   }
   
-  cat(paste("The estimation took:", x$tstr,"\n"))
+  cat(paste("The estimation took:", make.time(x) ,"\n"))
   
   cat("\nCoefficients:\n")
-  printCoefmat(x$CoefTable,digits=digits)
+  printCoefmat(x$CoefTable, digits = digits)
   
-  if(x$link=="ordered probit" || x$link == "ordered logit"){
-    cat("\nThresholds:\n")
-    print(x$kappa)
-  }
-  
-  
-  cat(paste("\nOptimization of log-likelihood by",x$logLik$type))
-  cat(paste("\nLL:",round(x$logLik$maximum,digits)))
-  cat(paste("\nNumber of Individuals:",x$logLik$nobs))
-  cat(paste("\nNumber of Iterations:",x$logLik$iterations))
-  cat(paste("\nExit of MLE:",x$logLik$message))
-  
+  cat(paste("\nOptimization of log-likelihood by", x$logLik$type))
+  cat(paste("\nLog Likelihood:", signif(x$logLik$maximum, digits)))
+  cat(paste("\nNumber of observations:", x$logLik$nobs))
+  cat(paste("\nNumber of iterations:" , x$logLik$iterations))
+  cat(paste("\nExit of MLE:", x$logLik$message))
   
   if(x$R.model){
     if(is.null(x$draws)){
-      cat(paste("\nSimulation based on",x$R,"pseudo-random draws"))
+      cat(paste("\nSimulation based on", x$R, "pseudo-random draws"))
     }else {
-      cat(paste("\nSimulation based on",x$R,"Halton draws"))
+      cat(paste("\nSimulation based on", x$R, "Halton draws"))
     }
   }
   invisible(x)

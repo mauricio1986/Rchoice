@@ -112,13 +112,14 @@ lnordered.ran<-function(theta, y, X, ranp, R, correlation, link,
   gbarvi <- Xac * dUds
   
   gbari  <- cbind(gkappa, gbarfi , gbarmi , gbarvi)
+  colnames(gbari) <- names(theta)
   attr(lls, 'gradient') <- weights * gbari
   
   if (make.estb){
     b.ran  <- array(NA, dim = c(N, R, Ka))
     b.ran2 <- array(NA, dim = c(N, R, Ka))
     for(j in 1:Ka){
-      b.ran[, , j]  < Br[, , j] * Qir
+      b.ran[, , j]  <- Br[, , j] * Qir
       b.ran2[, , j] <- (Br[, , j]^2) * Qir
     }
     b.ran  <- apply(b.ran,  c(1,3), sum)

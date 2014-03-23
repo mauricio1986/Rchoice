@@ -3,7 +3,7 @@
 # Codes from Yves Croissant
 ##############################
 
-#Halton function
+#Halton function: copied from mlogit package
 halton <- function(prime = 3, length = 100, drop = 10){
   halt <- 0
   t <- 0
@@ -14,7 +14,7 @@ halton <- function(prime = 3, length = 100, drop = 10){
   halt[(drop + 1):(length + drop)]
 }
 
-#Make draw function. Set up as Limdep: start with prime 3 and drop the first 10 observations
+#Make draw function. Modified from mlogit package
 make.draws <- function(R, Ka, haltons){
   # Create the matrix of random numbers
   if (!is.null(haltons)){

@@ -7,6 +7,7 @@
 \alias{logLik.Rchoice}
 \alias{model.matrix.Rchoice}
 \alias{nObs.Rchoice}
+\alias{print.Rchoice}
 \alias{summary.Rchoice}
 \alias{terms.Rchoice}
 \alias{update.Rchoice}
@@ -15,7 +16,7 @@
 \usage{
 Rchoice(formula, data, subset, weights, na.action, start = NULL,
   link = c("probit", "logit", "poisson", "ordered probit", "ordered logit"),
-  ranp = NULL, R = 40, haltons = NA, seed = 123, correlation = FALSE,
+  ranp = NULL, R = 40, haltons = NA, seed = 10, correlation = FALSE,
   ...)
 
 \method{terms}{Rchoice}(x, ...)
@@ -36,9 +37,12 @@ Rchoice(formula, data, subset, weights, na.action, start = NULL,
 
 \method{logLik}{Rchoice}(object, ...)
 
+\method{print}{Rchoice}(x, digits = max(3, getOption("digits") - 3),
+  width = getOption("width"), ...)
+
 \method{summary}{Rchoice}(object, ...)
 
-getSummary.Rchoice(obj, alpha = 0.05, ...)
+\method{getSummary}{Rchoice}(obj, alpha = 0.05, ...)
 }
 \arguments{
   \item{x,object,obj}{and object of class \code{Rchoice},}
@@ -90,6 +94,10 @@ getSummary.Rchoice(obj, alpha = 0.05, ...)
 
   \item{alpha}{significance value for \code{getSummary},}
 
+  \item{digits}{number of digits,}
+
+  \item{width}{width,}
+
   \item{...}{further arguments passed to \code{maxLik}.}
 }
 \value{
@@ -139,8 +147,8 @@ parameter hierarchical model can be estimated by including
 heterogeneity in the mean of the random parameters.
 \pkg{Rchoice} manages the variables in the hierarchical
 model by the \code{formula} object: all the hierarchical
-variables are included after the \code{|} symbol. See
-examples below }
+variables are included after the \code{|} symbol.
+\eqn{\beta_i=\beta+\pi's_i+L\omega_i} See examples below }
 }
 \examples{
 ## Probit model
@@ -184,7 +192,7 @@ summary(oprobit.ran)
 }
 }
 \author{
-Mauricio Sarrias
+Mauricio Sarrias \email{msarrias86@gmail.com}
 }
 \references{
 Greene, W. H. (2012). Econometric analysis. 7 edition.
@@ -196,4 +204,5 @@ Cambridge university press.
 \seealso{
 \code{\link[mlogit]{mlogit}}, \code{\link[maxLik]{maxLik}}
 }
+\keyword{package}
 

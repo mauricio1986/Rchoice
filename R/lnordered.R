@@ -42,6 +42,7 @@ lnordered<-function(theta, y, X, link,
   lamkap   <- (deltaj * drop(phi1) - deltak * drop(phi2)) / as.vector(pi)         #N*(j-2)
   gkappa   <- lamkap %*% jacobian(alpha)
   G        <- cbind(gkappa, gbeta)
+  colnames(G) <- names(theta)
   attr(ll,'gradient') <- weights * G  
   
   attr(ll,'probabilities') <- pi

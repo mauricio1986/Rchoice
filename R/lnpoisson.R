@@ -40,12 +40,14 @@ lnpoisson<-function(theta, y, X,
   
   #Gradient
   lambda <- y - mu
-  G      <- as.vector(lambda) * X  
+  G      <- as.vector(lambda) * X 
+  colnames(G) <- names(theta)
   attr(ll, 'gradient') <- weights * G 
   
   #Hessian
   lambda2 <- as.vector((-1) * mu)
   H       <- crossprod(lambda2 * X, X)
+  colnames(H) <- rownames(H) <- names(theta)
   attr(ll,'hessian') <- H
   
   attr(ll,'probabilities') <- pi
