@@ -42,7 +42,7 @@ Rchoice(formula, data, subset, weights, na.action, start = NULL,
 
 \method{summary}{Rchoice}(object, ...)
 
-\method{getSummary}{Rchoice}(obj, alpha = 0.05, ...)
+getSummary.Rchoice(obj, alpha = 0.05, ...)
 }
 \arguments{
   \item{x,object,obj}{and object of class \code{Rchoice},}
