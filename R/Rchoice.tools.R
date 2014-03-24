@@ -8,6 +8,7 @@ jacobian <- function(kappa){
   mat
 }
 
+# Compute time
 make.time <- function(object){
   et <- object$time[3]
   s <- round(et,0)

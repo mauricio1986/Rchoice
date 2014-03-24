@@ -36,7 +36,7 @@
 \Plainkeywords{discrete choice models, simulated maximum likelihood estimation,
   R, econometric}
   \Abstract{ \pkg{Rchoice} is a package for \proglang{R} which enables
-  the estimation of a variety of Binary, Count and Ordered models with unobserved and observed heterogeneity in the parameters for cross-section data. We implement recent simulated maximum likelihood methods for the estimation of the coefficients which can assume a variety of distributions such as the \pkg{mlogit} package. This document is a general description of \pkg{Rchoice} and all functionalities are illustrated using real databases. }
+  the estimation of a variety of Binary, Count and Ordered models with unobserved and observed heterogeneity in the parameters for cross-section data. We implement simulated maximum likelihood methods for the estimation of the coefficients which can assume a variety of distributions such as the \pkg{mlogit} package does. This document is a general description of \pkg{Rchoice} and all functionalities are illustrated using real databases. }
 
 
 \Address{
@@ -56,7 +56,7 @@ E-mail: \email{msarrias86@gmail.com}
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A growing number of empirical studies involve the assessment of influences on a choice among binary, count or ordered discrete alternatives. Those models are well known. However, one of the traditional modeling shortcomings is their inability to control for possible unobserved heterogeneity that may exist across individuals. For instance, one might assume that some variable, such as income or education, does not affect equally to the utility of individuals, therefore there may be a deviation from the mean of the respective coefficient. Binary, count and ordered choice models with random parameters extension allows heterogeneity among individuals assuming some distribution on parameters.\\
+A growing number of empirical studies involve the assessment of influences on a choice among binary, count or ordered discrete alternatives. Those models are well known. However, one of the traditional modeling shortcomings is their inability to control for possible unobserved heterogeneity that may exist across individuals. For instance, one might assume that some variable, such as income or education, does not affect equally the utility of individuals, therefore there may be a deviation from the mean of the respective coefficient. Binary, count and ordered choice models with random parameters extension allows heterogeneity among individuals assuming some distribution on the parameters.\\
 
 In this document we present the package \pkg{Rchoice} for program \proglang{R}. \pkg{Rchoice} is a package for estimating a variety of Ordered and Binary Choice Models with observed and unobserved heterogeneity in the coefficients. The estimation procedure is based on Maximum Simulated Likelihood (MSL) which allows to control for observed and unobserved heterogeneity in a very flexible way. \footnote{For multinomial discrete choice models with random parameters see \pkg{mlogit} package in \proglang{R} \citep{croissant2012estimation}} To our knowledge, only LIMDEP \citep{greene2002limdep} is able to estimate these type of models in a concise and flexible manner. Therefore, this package intends to make available these estimation methods to the general public and practitioners in a friendly and flexible way.
 
@@ -73,15 +73,15 @@ A random parameter model or random coefficient model permits regression paramete
   f(y|\vx_i, \vtheta)=\int f(y|\vx, \vbeta) g(\vbeta, \vtheta) d\vbeta
 \end{equation*}
 
-This integral will not have a closed-form solution except in some especial cases. For example, we can assume normally distributed random parameters, with $\vbeta_i\sim N(\vmu, \mSigma)$. Then $\vbeta_i = \vmu + \mSigma^{-1/2}\vupsilon_i$, where $\vupsilon_i\sim N(\vzeros, \mI)$, and thus:
+This integral will not have a closed-form solution except in some especial cases. For example, we can assume normally distributed random parameters, with $\vbeta_i\sim N(\vmu, \mSigma)$. Then $\vbeta_i = \vmu + \mSigma^{-1/2}\vupsilon_i$, where $\vupsilon_i\sim N(\vzeros, \mI)$, thus:
 
 \begin{equation}\label{eq:ncfs}
 	f(y|\vx,\vtheta)=\int_{-\infty}^{ \infty} f(y|\vx,\mu,\mSigma) \frac{1}{\sqrt{2\pi}}\exp\left(-\frac{1}{2}\vupsilon^2\right) d\vupsilon 
 \end{equation}    
 
-Note that (\ref{eq:ncfs}) has no close-form solution, that is, it is difficult to integrate out the random parameter and hence it difficult to perform ML estimation. However ML estimation may still be possible if we instead use a good approximation $\widehat{f}(y|\vx,\vtheta)$ of $f(y|\vx,\vtheta)$ to form likelihood function.\\
+Note that (\ref{eq:ncfs}) has no close-form solution, that is, it is difficult to integrate out the random parameter and hence it difficult to perform ML estimation. However ML estimation may still be possible if we instead use a good approximation $\widehat{f}(y|\vx,\vtheta)$ of $f(y|\vx,\vtheta)$ to form a likelihood function.\\
 
-But, how can we obtain $\widehat{f}(y|\vx,\vtheta)$? A good approximation can be obtained by \textbf{Monte Carlo integration}. \footnote{Another numerical approximation is Gauss-Hermite quadrature. However, it has been documented that for models with more than 3 random parameters SML performance better. } This procedure provides and alternative to deterministic numerical integration. Here we can \emph{simulate} the integration using random draws from the distribution $g(\vbeta|\vtheta)$. For example, the researcher specifies the function form $g(\vbeta|\vtheta)$ and wants to estimate the parameter $\vtheta$. The Monte Carlo approximation is:
+But, how can we obtain $\widehat{f}(y|\vx,\vtheta)$? A good approximation can be obtained by \textbf{Monte Carlo integration}. \footnote{Another numerical approximation is Gauss-Hermite quadrature. However, it has been documented that for models with more than 3 random parameters SML performs better. } This procedure provides and alternative to deterministic numerical integration. Here we can \emph{simulate} the integration using random draws from the distribution $g(\vbeta|\vtheta)$. For example, the researcher specifies the function form $g(\vbeta|\vtheta)$ and wants to estimate the parameter $\vtheta$. The Monte Carlo approximation is:
 
 \begin{equation*}
 \widehat{f}(y|\vx_i,\vbeta_{ir},\vtheta)=\frac{1}{R}\sum_{r=1}^R \tilde{f}(y|\vx,\vbeta_r,\vtheta),
@@ -134,7 +134,7 @@ In order to develop a general set of results, it is convenient to write each sin
   f(y_{i}|\vx_{i}, \vbeta_{ir}, \vtheta)=P_{ir}(\vtheta)=P_{ir}
 \end{equation*}
 
-where $\vtheta$ is the vector that collects all the parameters. The simulated log-likelihood is, then:
+where $\vtheta$ is the vector that collects all the parameters. The simulated log-likelihood is :
 
 \begin{equation}
 	\log L_s=\sum_{i=1}^N\log\left(\frac{1}{R} \sum_{r=1}^R P_{ir}(\vtheta) \right) 
@@ -152,7 +152,7 @@ then, the maximum likelihood can be written as:
 \log L_s=\sum_{i=1}^N\log P_i(\vtheta)
 \end{equation}
 
-With this notation, we will be able to accommodate richer specifications of the index function and discrete choice models simply by changing the specification of $P_{ir}$. As typical, the index model represents a latent process of the form:
+With this notation, we will be able to accommodate richer specifications of the index function and discrete choice models by simply changing the specification of $P_{ir}$. As typical, the index model represents a latent process of the form:
 
 \begin{equation}\label{eq:index}
 U_{ir}^*(\vtheta)=\vz_{i}'\vdelta+\vx_{i}'\vbeta_{ir}+\epsilon_i,
@@ -318,14 +318,14 @@ Define the weight $Q_{ir}(\vtheta)=P_{ir}(\vtheta)/ \sum_{r=1}^R P_{ir}(\vtheta)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\pkg{Rchoice} uses this formulas to compute the gradient and uses the Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm (as default) to iterative solve the MSL.
+\pkg{Rchoice} uses this formulas to compute the gradient and uses the Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm (as default) to iteratively solve the MSL.
 
 
 \section{Drawing from Densities}
 
 SML procedure requires to draw pseudo-random numbers from the specified distribution for simulation. A good performance of SML requires very large number of draws. The main drawback to this approach is that with large samples and complex models, the maximization of $\log L_s$ can be very time consuming. Researchers have gained speed with no degradation in simulation performance through the use of small number of Halton draws  \citep{bhat2001quasi, train2000halton}. The idea is that, instead of taking independent random draws, simulation can potentially be improved by selecting evaluation points more systematically and with better coverage \citep{sandor2004quasi}. In this section, we detail how draws are computed by \pkg{Rchoice}. \footnote{In terms of programming, we have modified the functions from \pkg{mlogit} \citep{croissant2012estimation} to allow variation in the mean by observed covariates (Hierarchical model). } \\
 
-Suppose that there are $K_2$ random parameters. Then, the $K_2$ elements of $\vomega_{ir}$ are drawn as follows: We begin with a $K_2$ random vector $\vomega_{ir}$ that is:
+Suppose that there are $K_2$ random parameters. Then, the $K_2$ elements of $\vomega_{ir}$ are drawn as follows. We begin with a $K_2$ random vector $\vomega_{ir}$ that is:
 
 \begin{itemize}
   \item $K_2$ independent draws from the standard uniform $(0,1)$ distribution or
@@ -425,7 +425,7 @@ data("Articles")
 head(Articles,3)
 @
 
-In order to see more information about the data, one can use:
+To see more information about the data, one can use:
 
 <<>>=
 help(Articles)
@@ -441,7 +441,7 @@ summary(poisson)
 
 The output shows that the log-likelihood function is estimated using NR algorithm in 7 iterations. If the user wants to estimate the model using another algorithm he should type \code{method = "bfgs"} for the BGFS method or \code{method = "bhhh"} for BHHH method.\\
 
-In terms of interpretation, we can say that, being a female scientist decreases the expected number of articles by a factor of 0.8 $(=\exp(-.225))$, holding all other variables constant. Or equivalently, being a female scientist decreases the expected number of articles by 20\% $(=100\left[\exp(-.225)-1\right])$, holding all other variables constant. Surprising, prestige of PhD department is not important for productivity. \\
+In terms of interpretation, we can say that, being a female scientist decreases the expected number of articles by a factor of 0.8 $(=\exp(-.225))$, holding all other variables constant. Or equivalently, being a female scientist decreases the expected number of articles by 20\% $(=100\left[\exp(-.225)-1\right])$, holding all other variables constant. Prestige of PhD department is not important for productivity. \\
 
 Another capability of \pkg{Rchoice} is its interaction with other packages in \proglang{R}. For example, we can compute the robust standard error by using the package \pkg{sandwich}:
 
@@ -503,7 +503,7 @@ summary(poisson.ran)
 The result shows that indeed the three coefficients are random in the sample. We can also say that : 
 
 <<>>=
-pnorm(coef(poisson.ran)["mean:kid5"]/coef(poisson.ran)["sd:kid5"])
+pnorm(coef(poisson.ran)["mean.kid5"]/coef(poisson.ran)["sd.kid5"])
 @
 
 a 23\% of the individuals have a positive coefficient for \texttt{kid5}. Note also that the mean coefficient for \texttt{phd} is 0 (not significant). This is due to the fact that the unobserved heterogeneity among scientists in the sample cancel out positive and negative effects. These observations are not possible with a Poisson regression with fixed effect. \\
@@ -516,7 +516,7 @@ waldtest(poisson.ran, poisson)
 lrtest(poisson.ran, poisson)
 @
 
-Both test reject the null hypothesis. Obviously, we can specify different distribution of the parameters by using the S3 method \code{update}:
+Both test reject the null hypothesis. We can also specify different distribution of the parameters by using the S3 method \code{update}:
 
 <<>>=
 poisson.ran2 <- update(poisson.ran, ranp = c(kid5 = "u", phd = "t" , ment = "cn"))
@@ -647,16 +647,6 @@ The output for the maximization shows that the model converges with 1 iteration,
 <<>>=
 probit2.ran <- update(probit.ran, start = c(0,0,0,0,0,0,0,0,0,0))
 summary(probit2.ran)
-@
-
-A Hierarchical Random Parameter Logit model can be obtained by:
-
-<<tidy=FALSE>>=
-Hran.logit<-Rchoice(lfp ~ k618 + lwg + wc + inc + k5 | age + wc + hc, 
-                    ranp = c(inc = "t", k5 = "n"), 
-                    link = "logit", 
-                    data = Workmroz)
-summary(Hran.logit)
 @
 
 

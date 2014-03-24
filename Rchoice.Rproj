@@ -13,7 +13,8 @@ RnwWeave: knitr
 LaTeX: pdfLaTeX
 
 BuildType: Package
-PackageInstallArgs: --no-multiarch --with-keep.source
-PackageBuildArgs: --resave-data
+PackageInstallArgs: --with-keep.source --compact-vignettes=gs+qpdf
+PackageBuildArgs: --resave-data --compact-vignettes=gs+qpdf
+PackageBuildBinaryArgs: --resave-data --compact-vignettes=gs+qpdf
 PackageCheckArgs: --as-cran --no-vignettes
 PackageRoxygenize: rd,collate,namespace

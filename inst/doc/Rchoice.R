@@ -76,7 +76,7 @@ summary(poisson.ran)
 ###################################################
 ### code chunk number 12: Rchoice.Rnw:505-506
 ###################################################
-pnorm(coef(poisson.ran)["mean:kid5"]/coef(poisson.ran)["sd:kid5"])
+pnorm(coef(poisson.ran)["mean.kid5"]/coef(poisson.ran)["sd.kid5"])
 
 
 ###################################################
@@ -170,23 +170,13 @@ summary(probit2.ran)
 
 
 ###################################################
-### code chunk number 25: Rchoice.Rnw:654-659
-###################################################
-Hran.logit<-Rchoice(lfp ~ k618 + lwg + wc + inc + k5 | age + wc + hc, 
-                    ranp = c(inc = "t", k5 = "n"), 
-                    link = "logit", 
-                    data = Workmroz)
-summary(Hran.logit)
-
-
-###################################################
-### code chunk number 26: Rchoice.Rnw:665-666
+### code chunk number 25: Rchoice.Rnw:655-656
 ###################################################
 data("Health")
 
 
 ###################################################
-### code chunk number 27: Rchoice.Rnw:671-677
+### code chunk number 26: Rchoice.Rnw:661-667
 ###################################################
 oprobit.ran<-Rchoice(newhsat ~ age + educ + hhinc + married + hhkids, 
                       data = Health, link = "ordered probit", 

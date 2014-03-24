@@ -30,18 +30,30 @@
 #' @param ... further arguments passed to \code{maxLik}.
 #' @export
 #' @details
-#' \itemize{
-#'  \item The model is estimated using the \code{maxLik} function of \code{\link[maxLik]{maxLik}} package.
-#'  \item If \code{ranp} is not NULL, the random parameter (random coefficient) model is estimated. The model 
-#'  specified by \code{link} is estimated. The \code{link} model is estimated using Simulated Maximum Likelihood (SMLE)
-#'  where the probabilities are simulated using \code{R} pseudo-draws if \code{halton=NULL} or \code{R} halton
-#'  draws if \code{halton=NA}. The user can also specified the primes and the number of dropped elements for the halton draws.
-#'  For example, if the model consists of two random parameters, the user can specify \code{haltons = list("prime"=c(2,3), "drop" = c(11,11))}. 
-#'  The functions to create the random parameters and the random draws are those crated by Yves Croissant for the package \code{\link[mlogit]{mlogit}}.
-#'  \item A random parameter hierarchical model can be estimated by including heterogeneity in the mean of the 
-#'  random parameters. \pkg{Rchoice} manages the variables in the hierarchical model by 
-#'  the \code{formula} object: all the hierarchical variables are included after the \code{|} symbol. \eqn{\beta_i=\beta+\pi's_i+L\omega_i}  See examples below
-#' }
+#' The models are estimated using the \code{maxLik} function of \code{\link[maxLik]{maxLik}} package.
+#' 
+#' 
+#'  If \code{ranp} is not NULL, the random parameter (random coefficient) model is estimated.   
+#'  A random parameter model or random coefficient models permits regression parameter to 
+#'  vary across individuals according to some distribution. A fully parametric 
+#'  random parameter model specifies the latent variable  \eqn{y^{*}} conditional on regressors
+#'  \eqn{x} and given parameters \eqn{\beta_i} to have conditional density \eqn{f(y|x, \beta_i)} where
+#'  \eqn{\beta_i} are iid with density \eqn{g(\beta_i|\theta_i)}. The density is assumed a priori by the user by the argument
+#'  \code{ranp}. If the parameters are assumed to be normally distributed \eqn{\beta_i ~ N(\beta, \Sigma)}, then the random parameter 
+#'  are constructed as: \deqn{\beta_{ir}=\beta+L\omega_{ir}}
+#'  where \eqn{LL'=\Sigma} and \eqn{\omega_{ir}} is the {r}-th draw from standard normal distribution for individual \eqn{i}. 
+#'  
+#'  
+#'  Once the model is specified by the argument \code{link}, the model is estimated using 
+#'  Simulated Maximum Likelihood (SMLE). The probabilities, given by \eqn{f(y|x, \beta_i)}, are simulated using \code{R} pseudo-draws if \code{halton=NULL} or \code{R} halton
+#'  draws if \code{halton = NA}. The user can also specified the primes and the number of dropped elements for the halton draws.
+#'  For example, if the model consists of two random parameters, the user can specify \code{haltons = list("prime" = c(2, 3), "drop" = c(11, 11))}. 
+#'  
+#'  
+#'  A random parameter hierarchical model can be estimated by including heterogeneity in the mean of the 
+#'  random parameters: \deqn{\beta_{ir}=\beta+\pi's_i+L\omega_{ir}} \pkg{Rchoice} manages the variables in the hierarchical model by 
+#'  the \code{formula} object: all the hierarchical variables (\eqn{s_i}) are included after the \code{|} symbol. See examples below
+#' 
 #' @return An object of class ``\code{Rchoice}'', a list elements:
 #' \item{coefficients}{the named vector of coefficients,}
 #' \item{link}{the type of model fitted,}
@@ -315,7 +327,6 @@ if (!is.null(start)){
  }
   
   #Optimizing the ML
-  print(opt)
   x <- eval(opt, sys.frame(which = nframe))
   
  ###################################
