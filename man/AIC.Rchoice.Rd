@@ -27,7 +27,8 @@ of class.
 \examples{
 ## Probit model
 data("Workmroz")
-probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  data = Workmroz , link="probit")
+probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,
+                 data = Workmroz , family = binomial('probit'))
 summary(probit)
 
 AIC(probit)

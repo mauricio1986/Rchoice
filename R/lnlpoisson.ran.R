@@ -1,11 +1,10 @@
 ## Log-Likelihood function for poisson model with random parameters
 
-lnlpoisson.ran<-function(theta, y, X, ranp, R, correlation, link,
+lnlpoisson.ran <- function(theta, y, X, ranp, R, correlation, link,
                         weights = NULL, haltons = NULL,
                         seed = 123, make.estb = FALSE,
                         ... )
 {
-  #Get Variables
   N    <- nrow(X)
   K    <- ncol(X)
   Vara <- sort(match(names(ranp), colnames(X)))
@@ -15,67 +14,60 @@ lnlpoisson.ran<-function(theta, y, X, ranp, R, correlation, link,
   Xa   <- X[ , Vara, drop = F]                        
   Xc   <- X[ , Varc, drop = F]                        
   
-  #Get vector of parameters
   gamma    <- as.matrix(theta[1:Kc])               
   beta.bar <- as.matrix(theta[(Kc + 1):(Kc + Ka)])  
   sigma    <- theta[-c(1:(Kc + Ka))]                 
   
-  # Make Random Draws
   set.seed(seed)
   Omega    <- make.draws(R * N, Ka, haltons) 
   
-  # Fixed Part of index
-  ZB <- as.vector(crossprod(t(Xc), gamma)) #N*1
+  ZB <- as.vector(crossprod(t(Xc), gamma))
   
-  # Random Part of index
   XB <- matrix(NA, N, R)  
-  #Matrix for Est.E(b_i)
   Br <- array(NA, dim = c(N, R, Ka))
   for (i in 1:N){
-    beta.r  <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], correlation,
-                          Pi = NULL, S = NULL)
-    XB[i, ]  <- crossprod(t(Xa[i, , drop = FALSE]), beta.r$br)
-    Br[i, , ] <- t(beta.r$br) #Now is R*Ka
+    beta.r    <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], 
+                          correlation, Pi = NULL, S = NULL)
+    XB[i, ]   <- crossprod(t(Xa[i, , drop = FALSE]), beta.r$br)
+    Br[i, , ] <- t(beta.r$br) 
   }
   
-  # Get probability & Lls
   index <- ZB + XB
-  # Note that exp(709) = Inf. This affect the gradient
+  # Note that exp(709) = Inf ==> gradient = Inf
   mu    <- pmin(exp(index), 700)
   Pir   <- dpois(y, lambda = mu)
-  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir) # Avoiding -Inf in log(pi)
-  Pi    <- apply(Pir, 1, mean)
+  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir)
+  Pi    <- rowSums(Pir) / R
   lls   <- sum(weights * log(Pi))
   
-  #Make gradient
   lambda <- y - mu
   Qir    <- Pir / (Pi * R) 
   eta    <- Qir * lambda            
   
-  dUdb<-  matrix(NA, N, Ka)
+  dUdb   <- matrix(NA, N, Ka)
   if(correlation){
     dUds <- matrix(NA, N, (0.5 * Ka * (Ka + 1))) 
-  }else{
+  } else {
     dUds <- matrix(NA, N, Ka)  
   }
-  for(i in 1:N){
-    beta.r  <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], correlation,
-                          Pi = NULL, S = NULL)
+  for (i in 1:N){
+    beta.r  <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], 
+                          correlation, Pi = NULL, S = NULL)
     dUdb[i,] <- tcrossprod(eta[i, ], beta.r$d.mu)  
     dUds[i,] <- tcrossprod(eta[i, ], beta.r$d.sigma)
   }
   
-  if(correlation){
+  if (correlation){
     vecX <- c()
     for (i in 1:Ka){
       vecX <- c(vecX, i:Ka)
     }
     Xac <- Xa[ , vecX]
-  }else{
+  } else {
     Xac <- Xa  
   }
   
-  gbarfi <- Xc  * as.vector(apply(eta, 1, sum))
+  gbarfi <- Xc  * rowSums(eta)
   gbarmi <- Xa  * dUdb
   gbarvi <- Xac * dUds
   

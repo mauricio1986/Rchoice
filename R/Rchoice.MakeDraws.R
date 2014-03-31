@@ -3,7 +3,7 @@
 # Codes from Yves Croissant
 ##############################
 
-#Halton function: copied from mlogit package
+## Halton function: copied from mlogit package
 halton <- function(prime = 3, length = 100, drop = 10){
   halt <- 0
   t <- 0
@@ -14,7 +14,7 @@ halton <- function(prime = 3, length = 100, drop = 10){
   halt[(drop + 1):(length + drop)]
 }
 
-#Make draw function. Modified from mlogit package
+## Make draw function. Modified from mlogit package
 make.draws <- function(R, Ka, haltons){
   # Create the matrix of random numbers
   if (!is.null(haltons)){
@@ -34,7 +34,7 @@ make.draws <- function(R, Ka, haltons){
       if (!is.na(haltons) && !is.null(haltons$drop)){
         if (!length(haltons$drop) %in% c(1,Ka)) stop("wrong number of drop indicated")
         if (length(haltons$drop) == 1){
-          drop.haltons <- rep(haltons$drop,Ka)
+          drop.haltons <- rep(haltons$drop, Ka)
         }
         else{
           drop.haltons <- haltons$drop
@@ -50,12 +50,11 @@ make.draws <- function(R, Ka, haltons){
   else{
     random.nb <- matrix(rnorm(R*Ka), ncol = Ka, nrow = R)
   }
-  t(random.nb)   #Ka * R
+  t(random.nb)  
 }
 
-# Make Lower Triangular
+## Make Lower Triangular
 makeL <- function(x){
-  # create the lower triangular C matrix
   K <- (-1+sqrt(1 + 8 * length(x)))/2
   mat <- matrix(0, K, K)
   mat[lower.tri(mat, diag = TRUE)] <- x
@@ -63,7 +62,7 @@ makeL <- function(x){
 }
 
 
-#####################Make Random Coefficients##########################
+## Make Random Coefficients
 Make.rcoef<-function(beta, sigma, ranp, omega, correlation, Pi=NULL, S=NULL){
   names.r    <- names(ranp)
   censored   <- names.r[ranp == "cn"]
@@ -72,11 +71,11 @@ Make.rcoef<-function(beta, sigma, ranp, omega, correlation, Pi=NULL, S=NULL){
   uniform    <- names.r[ranp == "u"]
   triangular <- names.r[ranp == "t"]
   
-  Ka    <- nrow(omega) #Number of random parameters
-  R     <- ncol(omega)  #Number of Draws
+  Ka    <- nrow(omega) 
+  R     <- ncol(omega)  
   
-  br    <- matrix(NA, Ka, R) #Matrix to store random Parameters
-  d.mu  <- d.sigma <- br   #Matrix of Derivatives
+  br    <- matrix(NA, Ka, R) 
+  d.mu  <- d.sigma <- br   
   
   beta  <- drop(beta)
   sigma <- drop(sigma)
@@ -119,45 +118,45 @@ Make.rcoef<-function(beta, sigma, ranp, omega, correlation, Pi=NULL, S=NULL){
         if (!is.null(Pi)) d.pis[i, ] <- br[i, ]
       }
     }
-  ### NO CORRELATION #########################  
+  ### no correlation ##
   } else {
     if(length(censored) > 0){
       sel <- censored
       if (!is.null(Pi)){
-        br[sel, ] <-pmax(beta[sel] + drop(Pi[sel, ,drop=F] %*% t(S)) + sigma[sel]*omega[sel, ,drop=F], 0)
+        br[sel, ] <- pmax(beta[sel] + drop(Pi[sel, , drop = F] %*% t(S)) + sigma[sel] * omega[sel, , drop = F], 0)
       }else{
-        br[sel, ] <-pmax(beta[sel] + sigma[sel]*omega[sel, ,drop=F], 0)
+        br[sel, ] <- pmax(beta[sel] + sigma[sel]*omega[sel, , drop = F], 0)
       }
-      d.mu[sel, ] <- as.numeric(br[sel, ]>0)
-      d.sigma[sel, ] <- d.mu[sel, ]*omega[sel, ]
+      d.mu[sel, ] <- as.numeric(br[sel, ] > 0)
+      d.sigma[sel, ] <- d.mu[sel, ] * omega[sel, ]
       if (!is.null(Pi)) {
         therows <- which(rownames(d.pis) == sel)
-        d.pis[therows, ]<-1
+        d.pis[therows, ] <- 1
       }
     }
     if(length(lognormal) > 0){
       sel <- lognormal
       if(!is.null(Pi)){
-        br[sel,] <-exp(beta[sel] + drop(Pi[sel,,drop=F] %*% t(S)) + sigma[sel]*omega[sel,,drop=F])
+        br[sel,] <-exp(beta[sel] + drop(Pi[sel,, drop = F] %*% t(S)) + sigma[sel] * omega[sel,, drop = F])
       }else {
-        br[sel,]<- exp(beta[sel] + sigma[sel]*omega[sel,,drop=F])
+        br[sel,]<- exp(beta[sel] + sigma[sel] * omega[sel,, drop = F])
       } 
-      d.mu[sel,]    <- br[sel,,drop=F]
-      d.sigma[sel,] <- d.mu[sel,]*omega[sel,]
+      d.mu[sel,]    <- br[sel,, drop = F]
+      d.sigma[sel,] <- d.mu[sel,] * omega[sel,]
       if (!is.null(Pi)) {
         therows <- which(rownames(d.pis) == sel)
-        d.pis[therows,] <- br[sel,,drop=F]
+        d.pis[therows,] <- br[sel,, drop = F]
       }
     }
     if(length(normal) > 0){
       sel <- normal
       if(!is.null(Pi)){
-        br[sel,] <- beta[sel] + drop(Pi[sel,,drop=F] %*% t(S)) + sigma[sel]*omega[sel,,drop=F]
+        br[sel,] <- beta[sel] + drop(Pi[sel,, drop = F] %*% t(S)) + sigma[sel]*omega[sel,, drop = F]
       } else {
-        br[sel,] <-beta[sel] + sigma[sel]*omega[sel,,drop=F]
+        br[sel,] <-beta[sel] + sigma[sel] * omega[sel,, drop = F]
       }
       d.mu[sel,]  <- 1
-      d.sigma[sel,] <- omega[sel,,drop=F]
+      d.sigma[sel,] <- omega[sel,, drop = F]
       if (!is.null(Pi)) {
         therows <- which(rownames(d.pis) == sel)
         d.pis[therows,] <- 1
@@ -165,29 +164,29 @@ Make.rcoef<-function(beta, sigma, ranp, omega, correlation, Pi=NULL, S=NULL){
     }
     if (length(uniform) > 0){
       sel <- uniform
-      etauni <- pnorm(omega[sel,,drop=F])
+      etauni <- pnorm(omega[sel,, drop = F])
       if(!is.null(Pi)){
-        br[sel,] <-beta[sel] - sigma[sel] + drop(Pi[sel,,drop=F] %*% t(S)) + 2*omega[sel,,drop=F]*sigma[sel]
+        br[sel,] <- beta[sel] - sigma[sel] + drop(Pi[sel,, drop = F] %*% t(S)) + 2 * omega[sel,,drop = F] * sigma[sel]
       }else{
-        br[sel,] <-beta[sel] - sigma[sel] + 2*omega[sel,,drop=F]*sigma[sel]
+        br[sel,] <- beta[sel] - sigma[sel] + 2 * omega[sel,, drop = F]*sigma[sel]
       }
       d.mu[sel,] <- 1
-      d.sigma[sel,] <- 2*etauni-1
+      d.sigma[sel,] <- 2 * etauni - 1
       if (!is.null(Pi)) {
-        therows <- which(rownames(d.pis) ==sel)
+        therows <- which(rownames(d.pis) == sel)
         d.pis[therows,] <- 1
       }
     }
     if (length(triangular) > 0){
       sel <- triangular
-      eta05 <- pnorm(omega[sel,,drop=F])<=0.5
+      eta05 <- pnorm(omega[sel,, drop = F]) <= 0.5
       d.mu[sel,] <- 1
-      d.sigma[sel,] <- eta05*(sqrt(2*pnorm(omega[sel,,drop=F])) -1)+
-        !eta05*(1-sqrt(2*(1 - pnorm(omega[sel,,drop=F]))))
+      d.sigma[sel,] <- eta05 * (sqrt(2 * pnorm(omega[sel,, drop = F])) - 1) + 
+        !eta05 * (1 - sqrt(2 * (1 - pnorm(omega[sel,, drop = F]))))
       if (!is.null(Pi)){
-        br[sel,] <-beta[sel] + drop(Pi[sel,,drop=F] %*% t(S)) + sigma[sel]*d.sigma[sel,]
+        br[sel,] <- beta[sel] + drop(Pi[sel,, drop = F] %*% t(S)) + sigma[sel] * d.sigma[sel,]
       }else{
-        br[sel,] <-beta[sel]+sigma[sel]*d.sigma[sel,]
+        br[sel,] <- beta[sel] + sigma[sel] * d.sigma[sel,]
       }
       if(!is.null(Pi)) {
         therows <- which(rownames(d.pis) == sel)

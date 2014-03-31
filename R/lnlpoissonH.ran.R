@@ -4,7 +4,6 @@ lnlpoissonH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
                          weights = NULL, haltons = NULL, make.estb = FALSE,
                          ...)
 {
-  #Get Variables and Global Parameters
   N    <- nrow(X)
   K    <- ncol(X)
   Vara <- sort(match(names(ranp), colnames(X)))
@@ -15,7 +14,6 @@ lnlpoissonH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
   Xa   <- X[ , Vara, drop = F]                        
   Xc   <- X[ , Varc, drop = F]                        
   
-  #Get estimated coefficients
   gamma    <- as.matrix(theta[1:Kc])               
   beta.bar <- as.matrix(theta[(Kc + 1):(Kc + Ka)])  
   phis     <- theta[(Kc + Ka + 1):(Kc + Ka + Ka * M)]         
@@ -24,11 +22,9 @@ lnlpoissonH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
   rownames(Phi) <- colnames(Xa)
   sigma    <- theta[-c(1:(Kc + Ka + Ka * M))]           
   
-  #Make Random Draws
   set.seed(seed)
   Omega <- make.draws(R * N, Ka, haltons) #Ka * N*R
   
-  #Fixed part of index
   ZB <- as.vector(crossprod(t(Xc), gamma)) 
   XB  <- matrix(NA, N, R)  
   XaS <- matrix(NA, N, length(phis))
@@ -43,15 +39,13 @@ lnlpoissonH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
     Br[i, , ] <- t(beta.r$br) 
   }
   
-  # Get Probabilities and log-likelihood function
   index <- ZB + XB
   mu    <- pmin(exp(index), 700)
   Pir   <- dpois(y, lambda = mu)
-  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir) # Avoiding -Inf in log(pi)
-  Pi    <- apply(Pir, 1, mean) 
+  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir)
+  Pi    <- rowSums(Pir) / R
   lls   <- sum(weights * log(Pi))
   
-  #Make gradient
   lambda <- y - mu
   Qir    <- Pir / (Pi * R) 
   eta    <- Qir * lambda
@@ -60,10 +54,10 @@ lnlpoissonH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
   dUdphi <- matrix(NA, N, length(phis))
   if(correlation){
     dUds <- matrix(NA, N, (0.5 * Ka * (Ka + 1))) 
-  }else{
+  } else {
     dUds <- matrix(NA, N, Ka)  
   }
-  for(i in 1:N){
+  for (i in 1:N){
     beta.r      <- Make.rcoef(beta = beta.bar, sigma = sigma, ranp = ranp, 
                               omega = Omega[, ((i - 1) * R + 1):(i * R), drop = FALSE], 
                               correlation = correlation, Pi = Phi, S = S[i, , drop = FALSE])
@@ -72,17 +66,17 @@ lnlpoissonH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
     dUds[i, ]   <- tcrossprod(eta[i, ], beta.r$d.sigma)
   }
   
-  if(correlation){
-    vecX <- c()
-    for (i in 1:Ka){
+  if (correlation){
+     vecX <- c()
+     for (i in 1:Ka){
       vecX <- c(vecX, i:Ka)
-    }
-    Xac <- Xa[ , vecX]
-  }else{
+     }
+     Xac <- Xa[ , vecX]
+  } else {
     Xac <- Xa  
   }
   
-  gbarfi  <- Xc  * as.vector(apply(eta, 1, sum))
+  gbarfi  <- Xc  * rowSums(eta)
   gbarmi  <- Xa  * dUdb
   gbarphi <- XaS * dUdphi
   gbarvi  <- Xac * dUds

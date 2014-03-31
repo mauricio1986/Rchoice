@@ -23,7 +23,7 @@ vcov.Rchoice <- function(object,...)
 {
 # FIXME: See what happens when tyring linear hyp with kappas  
   H<-object$logLik$hessian
-  if(object$link == "ordered probit" || object$link == "ordered logit"){
+  if(object$family == "ordinal"){
     bhat  <- coef(object)
     ahat  <- attr(object$coefficients, "alphas")
     J     <- length(ahat)
@@ -69,7 +69,7 @@ fitted.Rchoice <- function(object, ...){
 df.residual.Rchoice <- function(object, ...){
   n <- length(residuals(object))
   K <- length(coef(object))
-  return(n-K)
+  return(n - K)
 }
 
 #' @rdname Rchoice
@@ -111,7 +111,8 @@ update.Rchoice <- function (object, new, ...){
 #' @examples
 #' ## Probit model
 #' data("Workmroz")
-#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  data = Workmroz , link="probit")
+#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
+#'                  data = Workmroz , family = binomial('probit'))
 #' summary(probit)
 #' 
 #' AIC(probit)
@@ -130,7 +131,7 @@ BIC.Rchoice <- function( object, ...) {
 #' @S3method logLik Rchoice
 #' @export
 logLik.Rchoice <- function(object,...){
-  structure(-object$logLik$maximum[[1]], df = length(object$coefficients),
+  structure(object$logLik$maximum[[1]], df = length(object$coefficients),
             nobs = nObs(object), class = "logLik")
 }
 
@@ -150,7 +151,8 @@ logLik.Rchoice <- function(object,...){
 #' @examples
 #' ## Probit model
 #' data("Workmroz")
-#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  data = Workmroz , link="probit")
+#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
+#'                   data = Workmroz , family = binomial('probit'))
 #' summary(probit)
 #' 
 #' library(sandwich)
@@ -174,7 +176,8 @@ bread.Rchoice <- function( x, ... ) {
 #' @examples
 #' ## Probit model
 #' data("Workmroz")
-#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  data = Workmroz , link="probit")
+#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
+#'                   data = Workmroz , family = binomial('probit'))
 #' summary(probit)
 #' 
 #' estfun(probit) 
@@ -217,16 +220,16 @@ summary.Rchoice <- function (object,...){
 
 
 ##' @S3method print summary.Rchoice
-print.summary.Rchoice<- function(x, digits = max(3, getOption("digits") - 2),
+print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 2),
                                  width = getOption("width"),
                                  ...)
 {
-  cat(paste("\nModel:", x$link))
+  cat(paste("\nModel:", x$family))
   cat(paste("\nModel estimated on:", format(Sys.time(), "%a %b %d %X %Y"), "\n"))
   cat("\nCall:\n")
   cat(paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
   
-  if(!(x$link == "poisson")){
+  if(!(x$family == "poisson")){
     cat("\nFrecuencies of categories:\n")
     print(prop.table(x$freq), digits = digits)
   }
@@ -278,31 +281,33 @@ print.summary.Rchoice<- function(x, digits = max(3, getOption("digits") - 2),
 #' @S3method plot Rchoice
 #' @method plot Rchoice
 #' @export
-plot.Rchoice<-function(x, par=NULL, ind=FALSE, id=NULL, type = c("density", "histogram"), bin = 1 , adjust = 1,...){
+plot.Rchoice <- function(x, par = NULL, ind = FALSE, id = NULL, 
+                       type = c("density", "histogram"), bin = 1 , adjust = 1,...)
+{
   if(!x$R.model) stop("the plot method is only relevant for random parameters")
   if (is.null(par)) stop("Must specified the name of the random parameters")
   type <- match.arg(type)
   
   if(!ind){
-    ylab<-switch(type,
+    ylab <- switch(type,
                "density"   = "Density",
                "histogram" = "Frequency")
   
     rpar<-x$b.random[,par]
     ggplot2::qplot(as.vector(rpar), geom=type,
-        main=paste("Conditional Distribution: ", par), xlab=expression(E(hat(beta[i]))), 
-        ylab=ylab, binwidth = bin, adjust=adjust)
+        main = paste("Conditional Distribution: ", par), xlab = expression(E(hat(beta[i]))), 
+        ylab = ylab, binwidth = bin, adjust = adjust)
   }
   else{
-    if(is.null(id)) id<-seq(1,10,1) 
-    f.bran<-x$b.random[,par]
-    f.sran<-x$sd.random[,par]
-    lower<-f.bran-2*f.sran
-    upper<-f.bran+2*f.sran
-    plotrix::plotCI(id,f.bran[id],ui=upper[id],li=lower[id], col="red",
-                     xlab="Individual", ylab=expression(E(hat(beta[i]))),
-                     lty = 2,main=paste("Conditional Distribution: ", par),
-                     pch=21)
+    if(is.null(id)) id <- seq(1,10,1) 
+    f.bran <- x$b.random[,par]
+    f.sran <- x$sd.random[,par]
+    lower <- f.bran - 2*f.sran
+    upper <- f.bran + 2*f.sran
+    plotrix::plotCI(id,f.bran[id], ui = upper[id], li = lower[id], col = "red",
+                     xlab = "Individual", ylab = expression(E(hat(beta[i]))),
+                     lty = 2, main = paste("Conditional Distribution: ", par),
+                     pch = 21)
   } 
 }
 
@@ -331,13 +336,12 @@ cov.Rchoice <- function(x){
     v    <- x$coefficients[(Ktot - 0.5 * K * (K + 1) + 1) : Ktot]
     V    <- tcrossprod(makeL(v))
     colnames(V) <- rownames(V) <- nr
-    sv <- sqrt(diag(V))
   } else{
-    Ktot <-length(x$coefficients)
-    sv   <-tail(x$coefficients, K)
-    V    <-matrix(0, K, K)
+    Ktot <- length(x$coefficients)
+    sv   <- tail(x$coefficients, K)
+    V    <- matrix(0, K, K)
     diag(V) <- sv^2
-    colnames(V)<-rownames(V)<-nr
+    colnames(V) <- rownames(V) <- nr
   }
   V
 }

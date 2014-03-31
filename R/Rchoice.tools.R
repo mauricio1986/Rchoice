@@ -18,3 +18,31 @@ make.time <- function(object){
   s <- s-60*m
   paste(h, "h:", m, "m:", s, "s", sep="")
 }
+
+#' @export
+ordinal <- function(link = c('probit', 'logit')){
+  link <- match.arg(link)
+  list(family = 'ordinal', link = link)
+}
+
+is.hierarchical <- function(object) {
+  ifelse(length(object)[2] == 2, TRUE, FALSE)
+}
+
+has.intercept <- function(object, ...) {
+  UseMethod("has.intercept")
+}
+
+has.intercept.default <- function(object, ...) {
+  has.intercept(formula(object), ...)
+}
+
+has.intercept.formula <- function(object, ...) {
+  attr(terms(object), "intercept") == 1L
+}
+
+has.intercept.Formula <- function(object, rhs = NULL, ...) {
+  if(is.null(rhs)) rhs <- 1:length(attr(object, "rhs"))
+  sapply(rhs, function(x) has.intercept(formula(object, lhs = 0, rhs = x)))
+}
+

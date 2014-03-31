@@ -6,12 +6,13 @@ lnorderedH.ran<-function(theta, y, X, S, ranp, R, correlation, link,
                          ... )
 {
   pfun <- switch(link,
-                 "ordered probit" = pnorm,
-                 "ordered logit"  = plogis)
+                 "probit" = pnorm,
+                 "logit"  = plogis
+  )
   dfun <- switch(link,
-                 "ordered probit" = dnorm,
-                 "ordered logit"  = dlogis)
-  #Get Variables and Global Parameters
+                 "probit" = dnorm,
+                 "logit"  = dlogis
+  )
   N    <- nrow(X)
   K    <- ncol(X)
   Vara <- sort(match(names(ranp), colnames(X)))
@@ -22,7 +23,6 @@ lnorderedH.ran<-function(theta, y, X, S, ranp, R, correlation, link,
   Xc   <- X[, Varc, drop = F]
   M    <- ncol(S)
   
-  #For gradient
   m       <- unclass(sort(unique(y)))
   J       <- length(levels(y))
   m       <- as.matrix(m[2:(J - 1)], nrow = (J - 2))               
@@ -31,7 +31,6 @@ lnorderedH.ran<-function(theta, y, X, S, ranp, R, correlation, link,
   deltaj  <- delta == y
   deltak  <- delta == y-1
   
-  #Get estimated coefficients
   alpha    <- theta[1:(J-2)]
   kappa    <- c(-Inf, cumsum(c(0, exp(alpha))), +Inf)
   gamma    <- as.matrix(theta[((J - 2) + 1):((J - 2) + Kc)])
@@ -44,15 +43,11 @@ lnorderedH.ran<-function(theta, y, X, S, ranp, R, correlation, link,
   sigma    <- betasr[-c(1:(Ka + Ka * M))]          
   
   
-  #Make Random Draws
   set.seed(seed)
-  Omega <- make.draws(R * N, Ka, haltons) #Ka * N*R
+  Omega <- make.draws(R * N, Ka, haltons) 
   
-  #Fixed part of index
-  ZB <- as.vector(crossprod(t(Xc), gamma)) #N*1
-  
-  #Random Part of index
-  XB  <- matrix(NA, N, R)  #N*R
+  ZB <- as.vector(crossprod(t(Xc), gamma)) 
+  XB  <- matrix(NA, N, R)
   XaS <- matrix(NA, N, length(phis))
   colnames(XaS) <- names(phis)
   Br <- array(NA, dim = c(N, R, Ka))
@@ -62,26 +57,22 @@ lnorderedH.ran<-function(theta, y, X, S, ranp, R, correlation, link,
                             correlation = correlation, Pi = Phi, S = S[i, , drop = FALSE])
     XB[i, ]   <- crossprod(t(Xa[i, , drop = FALSE]), beta.r$br)
     XaS[i, ]  <- kronecker(t(S[i, , drop = FALSE]), t(Xa[i, , drop = FALSE]))
-    Br[i, , ] <- t(beta.r$br) #Now is R*Ka
+    Br[i, , ] <- t(beta.r$br)
   }
   
-  #Get probability
-  index  <- ZB+XB
+  index  <- ZB + XB
   eta1   <- kappa[y + 1] - index
   eta2   <- kappa[y] - index
   Pir    <- pfun(eta1) - pfun(eta2)
   Pir    <- ifelse(Pir <= 0, .Machine$double.eps, Pir)
-  Pi     <- apply(Pir, 1, mean)
+  Pi     <- rowSums(Pir) / R
   lls    <- sum(weights * log(Pi))
   
-  
-  #Gradient
   phi1     <- dfun(eta1) ; phi2 <- dfun(eta2)
   lambda   <- (phi2 - phi1) / Pir
   Qir      <- Pir / (Pi * R)
   eta      <- Qir * lambda
   
-  #Kappa part
   gkappa <- vector(mode = "list", length = (J - 2))
   for (j in 1:(J - 2)){
     gkappa[[j]] <- matrix(NA, N, R)
@@ -94,9 +85,9 @@ lnorderedH.ran<-function(theta, y, X, S, ranp, R, correlation, link,
   
   dUdb   <- matrix(NA, N, Ka)
   dUdphi <- matrix(NA, N, length(phis))
-  if(correlation){
+  if (correlation){
     dUds <- matrix(NA, N, (0.5 * Ka * (Ka + 1))) 
-  }else{
+  } else {
     dUds <- matrix(NA, N, Ka)  
   }
   for(i in 1:N){
@@ -114,11 +105,11 @@ lnorderedH.ran<-function(theta, y, X, S, ranp, R, correlation, link,
       vecX <- c(vecX, i:Ka)
     }
     Xac <- Xa[ , vecX]
-  }else{
+  } else {
     Xac <- Xa  
   }
   
-  gbarfi  <- Xc  * as.vector(apply(Qir * lambda, 1, sum))
+  gbarfi  <- Xc  * rowSums(eta)
   gbarmi  <- Xa  * dUdb
   gbarphi <- XaS * dUdphi
   gbarvi  <- Xac * dUds

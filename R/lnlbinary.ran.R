@@ -1,20 +1,21 @@
 ## Log-Likelihood function for binary model with random parameters
 
-lnlbinary.ran<-function(theta, y, X, ranp, R, correlation, link,
+lnlbinary.ran <- function(theta, y, X, ranp, R, correlation, link,
                   weights = NULL, haltons = NULL,
                   seed = 123, make.estb = FALSE,
                   ... )
 {
-  # Trick for symmetric distributions as probit and logit
-  qi    <- as.vector(2 * y - 1)
-  # F and f functions
   pfun <- switch(link,
                  "probit" = pnorm,
-                 "logit"  = plogis)
+                 "logit"  = plogis
+                  )
   dfun <- switch(link,
                  "probit" = dnorm,
-                 "logit"  = dlogis)
-  #Get Variables
+                 "logit"  = dlogis
+                 )
+  mill <- function(x) dfun(x) / pfun(x)
+  
+  ## get variables
   N    <- nrow(X)
   K    <- ncol(X)
   Vara <- sort(match(names(ranp), colnames(X)))
@@ -24,67 +25,65 @@ lnlbinary.ran<-function(theta, y, X, ranp, R, correlation, link,
   Xa   <- X[ , Vara, drop = F]                        
   Xc   <- X[ , Varc, drop = F]                        
   
-  #Get vector of parameters
+  ## get vector of parameters
   gamma    <- as.matrix(theta[1:Kc])               
   beta.bar <- as.matrix(theta[(Kc + 1):(Kc + Ka)])  
   sigma    <- theta[-c(1:(Kc + Ka))]                 
   
-  # Make Random Draws
+  ## make random draws
   set.seed(seed)
   Omega    <- make.draws(R * N, Ka, haltons) 
   
-  # Fixed Part of index
-  ZB <- as.vector(crossprod(t(Xc), gamma)) #N*1
+  ## fixed part of index
+  ZB <- as.vector(crossprod(t(Xc), gamma)) 
   
-  # Random Part of index
+  ## random part of index
   XB <- matrix(NA, N, R)  
-  #Matrix for Est.E(b_i)
   Br <- array(NA, dim = c(N, R, Ka))
   for (i in 1:N){
-    beta.r  <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], correlation,
-                          Pi = NULL, S = NULL)
+    beta.r  <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], 
+                          correlation, Pi = NULL, S = NULL)
     XB[i, ]  <- crossprod(t(Xa[i, , drop = FALSE]), beta.r$br)
-    Br[i, , ] <- t(beta.r$br) #Now is R*Ka
+    Br[i, , ] <- t(beta.r$br) 
   }
   
-  #Get probability & Lls
+  ## get probability and log-likelihhod
+  q <- 2 * y - 1
   index <- ZB + XB
-  Pir   <- pfun(qi * index)
-  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir) # Avoiding -Inf in log(pi)
-  Pi    <- apply(Pir, 1, mean)
+  Pir   <- pfun(q * index)
+  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir) 
+  Pi    <- rowSums(Pir) / R
   lls   <- sum(weights * log(Pi))
   
-  #Make gradient
-  fir    <- pmax(dnorm(qi * index), .Machine$double.eps) # Avoid 0 in dens
-  # fir    <- dnorm(qi * index)
-  lambda <- qi * ( fir / Pir)
+  ## make gradient
+  lambda <- q * mill(q * index)
   Qir    <- Pir / (Pi * R) 
   eta    <- Qir * lambda            
   
-  dUdb<-  matrix(NA, N, Ka)
-  if(correlation){
+  dUdb <- matrix(NA, N, Ka)
+  if (correlation){
     dUds <- matrix(NA, N, (0.5 * Ka * (Ka + 1))) 
   }else{
     dUds <- matrix(NA, N, Ka)  
   }
-  for(i in 1:N){
-    beta.r  <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], correlation,
-                          Pi = NULL, S = NULL)
+  for (i in 1:N){
+    beta.r  <- Make.rcoef(beta.bar, sigma, ranp, Omega[ , ((i - 1) * R + 1):(i * R), drop = FALSE], 
+                          correlation, Pi = NULL, S = NULL)
     dUdb[i,] <- tcrossprod(eta[i, ], beta.r$d.mu)  
     dUds[i,] <- tcrossprod(eta[i, ], beta.r$d.sigma)
   }
   
-  if(correlation){
+  if (correlation){
     vecX <- c()
     for (i in 1:Ka){
       vecX <- c(vecX, i:Ka)
     }
     Xac <- Xa[ , vecX]
-  }else{
+  } else{
     Xac <- Xa  
   }
   
-  gbarfi <- Xc  * as.vector(apply(eta, 1, sum))
+  gbarfi <- Xc  * rowSums(eta)
   gbarmi <- Xa  * dUdb
   gbarvi <- Xac * dUds
   

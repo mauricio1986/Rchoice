@@ -1,39 +1,35 @@
 lnbinary<-function(theta, y, X, link, 
                    weights = NULL, ...)
 {
-  if (is.null(weights)) weights <- rep(1, nrow(X))
-  index <- tcrossprod(X,t(theta))
-  qi    <- 2 * y - 1
-  
+  if (is.null(weights)) weights <- 1
   pfun <- switch(link,
                  "probit" = pnorm,
-                 "logit"  = plogis)
+                 "logit"  = plogis
+                 )
   dfun <- switch(link,
-                 "probit" = dnorm,
-                 "logit"  = dlogis)
-  qfun <- switch(link,
-                 "probit" = qnorm,
-                 "logit"  = qlogis)
+                  "probit" = dnorm,
+                  "logit"  = dlogis
+                 )
   ddfun <- switch(link,
-                  "logit" = function(x) (1 - 2 * plogis(x)) * plogis(x) * (1 - plogis(x)),
-                  "probit"= function(x) -x * dnorm(x))
+                  "logit" = function(x) (1 - 2 * pfun(x)) * pfun(x) * (1 - pfun(x)),
+                  "probit"= function(x) -x * dnorm(x)
+                 )  
+  mill  <- function(x) dfun(x) / pfun(x)
+  millh <- function(x) ddfun(x) / pfun(x) - (dfun(x) / pfun(x))^2
   
-  thresh <- -qfun(.Machine$double.eps)
-  eta    <- pmin(pmax(index, -thresh), thresh)
-  pi     <- pfun(qi * eta)
+  index  <- tcrossprod(X, t(theta))
+  q      <- 2 * y - 1 
+  pi     <- pfun(q * index)
+  pi     <- ifelse(pi <= 0, .Machine$double.eps, pi) 
   ll     <- sum(weights * log(pi))
   
-  #Gradient
-  dens   <- pmax(dfun(qi * index), .Machine$double.eps)
-  lambda <- qi * (dens / pi)
-  G <- as.vector(lambda) * X
+  ## Gradient
+  G <- as.vector(q * mill(q * index)) * X
   colnames(G) <- names(theta)
   attr(ll,'gradient') <- weights * G
   
-  #Hessian
-  ddens   <- ddfun(qi * index)
-  lambda2 <- ((ddens / pi)-(dens / pi) ^ 2) * qi^2
-  H <- crossprod(as.vector(lambda2) * X, X)
+  ## Hessian
+  H <- crossprod(as.vector(millh(q * index)) * X, X)
   colnames(H) <- rownames(H) <- names(theta)
   attr(ll,'hessian') <- H
   

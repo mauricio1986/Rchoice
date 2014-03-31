@@ -7,6 +7,7 @@
 \alias{logLik.Rchoice}
 \alias{model.matrix.Rchoice}
 \alias{nObs.Rchoice}
+\alias{ordinal}
 \alias{print.Rchoice}
 \alias{summary.Rchoice}
 \alias{terms.Rchoice}
@@ -14,8 +15,7 @@
 \alias{vcov.Rchoice}
 \title{Estimate discrete choice model with random parameters}
 \usage{
-Rchoice(formula, data, subset, weights, na.action, start = NULL,
-  link = c("probit", "logit", "poisson", "ordered probit", "ordered logit"),
+Rchoice(formula, data, subset, weights, na.action, family, start = NULL,
   ranp = NULL, R = 40, haltons = NA, seed = 10, correlation = FALSE,
   ...)
 
@@ -64,10 +64,7 @@ getSummary.Rchoice(obj, alpha = 0.05, ...)
 
   \item{start}{a vector of starting values,}
 
-  \item{link}{a string indicating the model to be
-  estimated: "\code{probit}", "\code{logit}" ,
-  "\code{poisson}", "\code{ordered probit}" or
-  "\code{ordered logit}"}
+  \item{family}{the distribution to be used,}
 
   \item{ranp}{a named vector whose names are the random
   parameters and values the distribution: "\code{n}" for
@@ -103,12 +100,13 @@ getSummary.Rchoice(obj, alpha = 0.05, ...)
 \value{
 An object of class ``\code{Rchoice}'', a list elements:
 \item{coefficients}{the named vector of coefficients,}
-\item{link}{the type of model fitted,} \item{logLik}{a set
-of values of the maximum likelihood procedure,}
-\item{mf}{the model framed used,} \item{formula}{the
-formula (a Formula object),} \item{time}{\code{proc.time()}
-minus the start time,} \item{freq}{frequency of dependent
-variable,} \item{draws}{type of draws used,}
+\item{family}{type of model,} \item{link}{distribution of
+the errors,} \item{logLik}{a set of values of the maximum
+likelihood procedure,} \item{mf}{the model framed used,}
+\item{formula}{the formula (a Formula object),}
+\item{time}{\code{proc.time()} minus the start time,}
+\item{freq}{frequency of dependent variable,}
+\item{draws}{type of draws used,}
 \item{R.model}{\code{TRUE} if a random parameter model is
 fitted,} \item{R}{number of draws used,}
 \item{b.random}{matrix of conditional expectation of random
@@ -147,7 +145,7 @@ constructed as: \deqn{\beta_{ir}=\beta+L\omega_{ir}} where
 \eqn{LL'=\Sigma} and \eqn{\omega_{ir}} is the {r}-th draw
 from standard normal distribution for individual \eqn{i}.
 
-Once the model is specified by the argument \code{link},
+Once the model is specified by the argument \code{family},
 the model is estimated using Simulated Maximum Likelihood
 (SMLE). The probabilities, given by \eqn{f(y|x, \beta_i)},
 are simulated using \code{R} pseudo-draws if
@@ -169,39 +167,40 @@ symbol. See examples below
 \examples{
 ## Probit model
 data("Workmroz")
-probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  data = Workmroz , link="probit")
+probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,
+                 data = Workmroz, family = binomial('probit'))
 summary(probit)
 
 ## Poisson model
 data("Articles")
-poisson <- Rchoice(art ~ fem + mar + kid5 + phd + ment, data = Articles, link = "poisson")
+poisson <- Rchoice(art ~ fem + mar + kid5 + phd + ment, data = Articles, family = poisson)
 summary(poisson)
 
 ## Ordered probit model
 data("Health")
-oprobit<-Rchoice(newhsat ~ age + educ + hhinc + married + hhkids,
-data = Health, link = "ordered probit", subset = year == 1988)
+oprobit <- Rchoice(newhsat ~ age + educ + hhinc + married + hhkids,
+data = Health, family = ordinal('probit'), subset = year == 1988)
 summary(oprobit)
 
  \dontrun{
 ## Hierarchical Logit Random Parameter Model
 Hran.logit<-Rchoice(lfp ~ k618 + lwg + wc + inc + k5 | age + wc + hc,
 ranp = c(inc = "t", k5 = "n"),
-link = "logit", data = Workmroz)
+family = binomial('logit'), data = Workmroz)
 summary(Hran.logit)
 }
 
 \dontrun{
 ## Hierarchical Poisson model with correlated random parameters
 poissonH.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment | fem, data = Articles,
-ranp = c(kid5="n", phd = "n", ment = "n"), link = "poisson", correlation =  TRUE)
+ranp = c(kid5="n", phd = "n", ment = "n"), family = poisson, correlation =  TRUE)
 summary(poissonH.ran)
 }
 
 \dontrun{
 ## Ordered Probit model with random parameters
-oprobit.ran<-Rchoice(newhsat ~ age + educ + hhinc + married + hhkids,
-                    data = Health, link = "ordered probit", subset = year == 1988,
+oprobit.ran <- Rchoice(newhsat ~ age + educ + hhinc + married + hhkids,
+                    data = Health, family = ordinal('probit'), subset = year == 1988,
                     ranp = c(age = "n", hhinc = "n"), print.level=1,
                     start = rep(0,11))
 summary(oprobit.ran)

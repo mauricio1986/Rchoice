@@ -4,16 +4,16 @@ lnlbinaryH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
                    weights = NULL, haltons = NULL, make.estb = FALSE,
                    ...)
 {
-  # Trick for symmetric distributions as probit and logit
-  qi    <- as.vector(2 * y - 1)
-  # F and f functions
   pfun <- switch(link,
                  "probit" = pnorm,
-                 "logit"  = plogis)
+                 "logit"  = plogis
+  )
   dfun <- switch(link,
                  "probit" = dnorm,
-                 "logit"  = dlogis)
-  #Get Variables and Global Parameters
+                 "logit"  = dlogis
+  )
+  mill <- function(x) dfun(x) / pfun(x)
+  
   N    <- nrow(X)
   K    <- ncol(X)
   Vara <- sort(match(names(ranp), colnames(X)))
@@ -23,8 +23,7 @@ lnlbinaryH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
   Kc   <- length(Varc)
   Xa   <- X[ , Vara, drop = F]                        
   Xc   <- X[ , Varc, drop = F]                        
-  
-  #Get estimated coefficients
+
   gamma    <- as.matrix(theta[1:Kc])               
   beta.bar <- as.matrix(theta[(Kc + 1):(Kc + Ka)])  
   phis     <- theta[(Kc + Ka + 1):(Kc + Ka + Ka * M)]         
@@ -33,11 +32,9 @@ lnlbinaryH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
   rownames(Phi) <- colnames(Xa)
   sigma    <- theta[-c(1:(Kc + Ka + Ka * M))]           
   
-  #Make Random Draws
   set.seed(seed)
   Omega <- make.draws(R * N, Ka, haltons) #Ka * N*R
   
-  #Fixed part of index
   ZB <- as.vector(crossprod(t(Xc), gamma)) 
   XB  <- matrix(NA, N, R)  
   XaS <- matrix(NA, N, length(phis))
@@ -52,16 +49,14 @@ lnlbinaryH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
     Br[i, , ] <- t(beta.r$br) 
   }
   
+  q <- 2 * y - 1
   index <- ZB + XB
-  Pir   <- pfun(qi * index)
-  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir) # Avoiding -Inf in log(pi)
-  Pi    <- apply(Pir, 1, mean) 
+  Pir   <- pfun(q * index)
+  Pir   <- ifelse(Pir <= 0, .Machine$double.eps, Pir) 
+  Pi    <- rowSums(Pir) / R
   lls   <- sum(weights * log(Pi))
   
-  #Make gradient
-  #fir    <- pmax(dnorm(qi * index), .Machine$double.eps) # Avoid 0 in dens
-  fir    <- dnorm(qi * index)
-  lambda <- qi * ( fir / Pir)
+  lambda <- q * mill(q * index)
   Qir    <- Pir / (Pi * R) 
   eta    <- Qir * lambda
   
@@ -91,7 +86,7 @@ lnlbinaryH.ran<-function(theta, y, X, S, ranp, R, link, seed, correlation,
     Xac <- Xa  
   }
   
-  gbarfi  <- Xc  * as.vector(apply(eta, 1, sum))
+  gbarfi  <- Xc  * rowSums(eta)
   gbarmi  <- Xa  * dUdb
   gbarphi <- XaS * dUdphi
   gbarvi  <- Xac * dUds
