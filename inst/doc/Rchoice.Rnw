@@ -4,7 +4,7 @@
 \usepackage{amsmath,amssymb,bm,babel,bbm} % Math packages
 \input{ee.sty}
 %\VignetteIndexEntry{Discrete choice models with random parameters in R : The Rchoice Package}
-%\VignetteDepends{maxLik, Formula, ggplot2, plotrix}
+%\VignetteDepends{maxLik, Formula}
 %\VignetteKeywords{discrete choice models, simulated maximum likelihood estimation, R, econometrics}
 %\VignettePackage{Rchoice}
 
@@ -426,7 +426,7 @@ head(Articles,3)
 
 To see more information about the data, one can use:
 
-<<>>=
+<<eval=FALSE>>=
 help(Articles)
 @
 
@@ -488,8 +488,9 @@ Then, in order to estimate this model, we can write:
 
 <<tidy=FALSE>>=
 poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
-                       data = Articles, ranp = c(kid5="n", phd = "n", ment = "n"), 
-                       family = poisson)
+                       data = Articles, ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+                       family = poisson,
+                       R = 10)
 @
 
 
@@ -505,7 +506,7 @@ The result shows that indeed the three coefficients are random in the sample. We
 pnorm(coef(poisson.ran)["mean.kid5"]/coef(poisson.ran)["sd.kid5"])
 @
 
-a 23\% of the individuals have a positive coefficient for \texttt{kid5}. Note also that the mean coefficient for \texttt{phd} is 0 (not significant). This is due to the fact that the unobserved heterogeneity among scientists in the sample cancel out positive and negative effects. These observations are not possible with a Poisson regression with fixed effect. \\
+a 21\% of the individuals have a positive coefficient for \texttt{kid5}. Note also that the mean coefficient for \texttt{phd} is 0 (not significant). This is due to the fact that the unobserved heterogeneity among scientists in the sample cancel out positive and negative effects. These observations are not possible with a Poisson regression with fixed effect. \\
 
 
 Suppose that now we want to test if $H_0=\sigma_{\texttt{kid5}}=\sigma_{\texttt{phd}}=\sigma_{\texttt{ment}}=0$. This can be done by using the function \code{waldtest} or \code{lrtest} from package \pkg{lmtest}:
@@ -517,7 +518,7 @@ lrtest(poisson.ran, poisson)
 
 Both test reject the null hypothesis. We can also specify different distribution of the parameters by using the S3 method \code{update}:
 
-<<>>=
+<<eval = FALSE>>=
 poisson.ran2 <- update(poisson.ran, ranp = c(kid5 = "u", phd = "t" , ment = "cn"))
 summary(poisson.ran2)
 @
@@ -526,8 +527,9 @@ Now, we estimate the model \texttt{poisson.ran}, but assuming that the random pa
 
 <<tidy=FALSE>>=
 poissonc.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, data = Articles, 
-                        ranp = c(kid5="n", phd = "n", ment = "n"), 
-                        family = poisson, correlation =  TRUE)
+                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+                        family = poisson, correlation =  TRUE,
+                        R = 10)
 summary(poissonc.ran)
 @
 
@@ -557,7 +559,8 @@ poissonH.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment | fem,
                         data = Articles,
                         ranp = c(kid5="n", phd = "n", ment = "n"), 
                         family = poisson,
-                        correlation =  TRUE)
+                        correlation =  TRUE,
+                        R = 10)
 summary(poissonH.ran)
 @
 
@@ -625,7 +628,7 @@ In this section, we show how to estimate Binary and Ordered (Probit or Logit) mo
 
 The argument \code{family} allows to specify between ordinal and binomial models. We estimate a Probit model with random parameters using the \code{Workmroz} data base:
 
-<<tidy=FALSE>>=
+<<tidy=FALSE, eval=FALSE>>=
 data("Workmroz")
 probit.ran <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc, 
                       ranp = c(k5 = "n", hc = "n"), 
@@ -635,14 +638,6 @@ probit.ran <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,
 summary(probit.ran)
 @
 
-Note that if we set the initial values all zeros, we get:
-
-<<>>=
-probit2.ran <- update(probit.ran, start = rep(0, 10))
-summary(probit2.ran)
-@
-
-Using a zero vector as the initial values of the model improves efficiency by reducing the standard errors. All other qualities shown in the case of poisson, such as correlated random parameters models, hierarchical models and so on, can be applied for binary and ordered models. \\
 
 In order to analyze ordered models, we use the \code{"Health"} database:
 
@@ -652,7 +647,7 @@ data("Health")
 
 We estimate a Random Parameter Ordered Probit model for the variable \texttt{newhsat} for year 1988 (see \texttt{help(Health)}) 
 
-<<tidy=FALSE>>=
+<<tidy=FALSE, eval = FALSE>>=
 oprobit.ran <- Rchoice(newhsat ~ age + educ + hhinc + married + hhkids, 
                       data = Health, family = ordinal('probit'), 
                       subset = year == 1988, 

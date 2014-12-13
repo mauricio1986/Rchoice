@@ -14,9 +14,9 @@ head(Articles,3)
 
 
 ###################################################
-### code chunk number 3: Rchoice.Rnw:429-430
+### code chunk number 3: Rchoice.Rnw:429-430 (eval = FALSE)
 ###################################################
-help(Articles)
+## help(Articles)
 
 
 ###################################################
@@ -60,123 +60,119 @@ deltaMethod(poisson, "phd/ment")
 
 
 ###################################################
-### code chunk number 10: Rchoice.Rnw:489-492
+### code chunk number 10: Rchoice.Rnw:489-493
 ###################################################
 poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
-                       data = Articles, ranp = c(kid5="n", phd = "n", ment = "n"), 
-                       family = poisson)
+                       data = Articles, ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+                       family = poisson,
+                       R = 10)
 
 
 ###################################################
-### code chunk number 11: Rchoice.Rnw:498-499
+### code chunk number 11: Rchoice.Rnw:499-500
 ###################################################
 summary(poisson.ran)
 
 
 ###################################################
-### code chunk number 12: Rchoice.Rnw:504-505
+### code chunk number 12: Rchoice.Rnw:505-506
 ###################################################
 pnorm(coef(poisson.ran)["mean.kid5"]/coef(poisson.ran)["sd.kid5"])
 
 
 ###################################################
-### code chunk number 13: Rchoice.Rnw:513-515
+### code chunk number 13: Rchoice.Rnw:514-516
 ###################################################
 waldtest(poisson.ran, poisson)
 lrtest(poisson.ran, poisson)
 
 
 ###################################################
-### code chunk number 14: Rchoice.Rnw:520-522
+### code chunk number 14: Rchoice.Rnw:521-523 (eval = FALSE)
 ###################################################
-poisson.ran2 <- update(poisson.ran, ranp = c(kid5 = "u", phd = "t" , ment = "cn"))
-summary(poisson.ran2)
+## poisson.ran2 <- update(poisson.ran, ranp = c(kid5 = "u", phd = "t" , ment = "cn"))
+## summary(poisson.ran2)
 
 
 ###################################################
-### code chunk number 15: Rchoice.Rnw:527-531
+### code chunk number 15: Rchoice.Rnw:528-533
 ###################################################
 poissonc.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, data = Articles, 
-                        ranp = c(kid5="n", phd = "n", ment = "n"), 
-                        family = poisson, correlation =  TRUE)
+                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+                        family = poisson, correlation =  TRUE,
+                        R = 10)
 summary(poissonc.ran)
 
 
 ###################################################
-### code chunk number 16: Rchoice.Rnw:536-538
+### code chunk number 16: Rchoice.Rnw:538-540
 ###################################################
 cov.Rchoice(poissonc.ran)
 cor.Rchoice(poissonc.ran)
 
 
 ###################################################
-### code chunk number 17: Rchoice.Rnw:555-561
+### code chunk number 17: Rchoice.Rnw:557-564
 ###################################################
 poissonH.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment | fem, 
                         data = Articles,
                         ranp = c(kid5="n", phd = "n", ment = "n"), 
                         family = poisson,
-                        correlation =  TRUE)
+                        correlation =  TRUE,
+                        R = 10)
 summary(poissonH.ran)
 
 
 ###################################################
-### code chunk number 18: Rchoice.Rnw:566-567
+### code chunk number 18: Rchoice.Rnw:569-570
 ###################################################
 lrtest(poissonH.ran, poissonc.ran)
 
 
 ###################################################
-### code chunk number 19: Rchoice.Rnw:601-602
+### code chunk number 19: Rchoice.Rnw:604-605
 ###################################################
 plot(poissonH.ran, par = "ment", type = "histogram", bin=0.005)
 
 
 ###################################################
-### code chunk number 20: Rchoice.Rnw:607-608
+### code chunk number 20: Rchoice.Rnw:610-611
 ###################################################
 plot(poissonH.ran, par = "ment")
 
 
 ###################################################
-### code chunk number 21: Rchoice.Rnw:615-616
+### code chunk number 21: Rchoice.Rnw:618-619
 ###################################################
 plot(poissonH.ran, par = "ment", ind = TRUE, id = seq(1, 50, 1))
 
 
 ###################################################
-### code chunk number 22: Rchoice.Rnw:628-635
+### code chunk number 22: Rchoice.Rnw:631-638 (eval = FALSE)
 ###################################################
-data("Workmroz")
-probit.ran <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc, 
-                      ranp = c(k5 = "n", hc = "n"), 
-                      family = binomial('probit'), 
-                      data = Workmroz, 
-                      R = 100)
-summary(probit.ran)
+## data("Workmroz")
+## probit.ran <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc, 
+##                       ranp = c(k5 = "n", hc = "n"), 
+##                       family = binomial('probit'), 
+##                       data = Workmroz, 
+##                       R = 100)
+## summary(probit.ran)
 
 
 ###################################################
-### code chunk number 23: Rchoice.Rnw:640-642
-###################################################
-probit2.ran <- update(probit.ran, start = rep(0, 10))
-summary(probit2.ran)
-
-
-###################################################
-### code chunk number 24: Rchoice.Rnw:649-650
+### code chunk number 23: Rchoice.Rnw:644-645
 ###################################################
 data("Health")
 
 
 ###################################################
-### code chunk number 25: Rchoice.Rnw:655-661
+### code chunk number 24: Rchoice.Rnw:650-656 (eval = FALSE)
 ###################################################
-oprobit.ran <- Rchoice(newhsat ~ age + educ + hhinc + married + hhkids, 
-                      data = Health, family = ordinal('probit'), 
-                      subset = year == 1988, 
-                      ranp = c(age = "n", hhinc = "n"), 
-                      start = rep(0, 11))
-summary(oprobit.ran)
+## oprobit.ran <- Rchoice(newhsat ~ age + educ + hhinc + married + hhkids, 
+##                       data = Health, family = ordinal('probit'), 
+##                       subset = year == 1988, 
+##                       ranp = c(age = "n", hhinc = "n"), 
+##                       start = rep(0, 11))
+## summary(oprobit.ran)
 
 

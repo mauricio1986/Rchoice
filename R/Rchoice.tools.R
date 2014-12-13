@@ -25,24 +25,17 @@ ordinal <- function(link = c('probit', 'logit')){
   list(family = 'ordinal', link = link)
 }
 
-is.hierarchical <- function(object) {
-  ifelse(length(object)[2] == 2, TRUE, FALSE)
+# Added in version 0.2
+repRows <- function(x, n){
+  matrix(rep(x, each = n), nrow = n)
 }
 
-has.intercept <- function(object, ...) {
-  UseMethod("has.intercept")
+# Added in version 0.2
+make.add <- function(row, col, Ka){
+  sa <- makeL(1:rep(0.5 * Ka * (Ka + 1)))
+  for (k in row:col){ 
+    cb <- sa[k, row]
+    form <- paste(paste("x",  cb:(cb + (Ka - k)), sep = ""), paste("x", cb, sep = ""), sep = "*")
+  }
+  form
 }
-
-has.intercept.default <- function(object, ...) {
-  has.intercept(formula(object), ...)
-}
-
-has.intercept.formula <- function(object, ...) {
-  attr(terms(object), "intercept") == 1L
-}
-
-has.intercept.Formula <- function(object, rhs = NULL, ...) {
-  if(is.null(rhs)) rhs <- 1:length(attr(object, "rhs"))
-  sapply(rhs, function(x) has.intercept(formula(object, lhs = 0, rhs = x)))
-}
-
