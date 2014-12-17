@@ -4,7 +4,7 @@
 #' Poisson and Ordered (logit and probit) model with random coefficients for cross-sectional and panel data using simulated maximum likelihood.
 #' 
 #' @name Rchoice
-#' @param formula a symbolic description of the model to be estimated,
+#' @param formula a symbolic description of the model to be estimated. The \code{formula} consists in two parts. The first one is reserved for standard variables with fixed and random parameters. The second one is reserved for variables that enter in the mean of the random parameters. See for example \code{\link{rFormula}},
 #' @param new an updated formula for the update method,
 #' @param data the data. It may be a \code{pdata.frame} object or an ordinary \code{data.frame}, 
 #' @param subset an optional vector specifying a subset of observations,
@@ -12,46 +12,42 @@
 #' @param na.action a function wich indicated what should happen when the data
 #' contains \code{NA}'s,
 #' @param start a vector of starting values,
-#' @param family the distribution to be used,
+#' @param family the distribution to be used. It might be \code{family = binomial("probit")} for a Probit Model, \code{family = binomial("logit")} for a Logit model, \code{family = ordinal("probit")} for an Ordered Probit Model, \code{family = ordinal("logit")} for a Ordered Logit Model for an Ordered Logit Model, and  \code{family = "poisson"} for a Poisson Model, 
 #' @param ranp a named vector whose names are the random parameters and values the distribution:
-#' "\code{n}" for normal, "\code{ln}" for log-normal, "\code{cn}" for truncated normal, "\code{u}" for uniform, "\code{t}" for triangular, "\code{sb}" for Johnson SB,
+#' "\code{n}" for normal, "\code{ln}" for log-normal, "\code{cn}" for truncated normal, "\code{u}" for uniform, "\code{t}" for triangular, "\code{sb}" for Johnson Sb,
 #' @param R the number of draws if \code{ranp} is not \code{NULL},
 #' @param haltons only relevant if \code{ranp} is not \code{NULL}. If not \code{NULL}, halton sequence is used
 #' instead of pseudo-random numbers. If \code{haltons=NA}, some default values are used for
-#' the prime of the sequence and for the number of element droped. Otherwise, \code{haltons} should
-#' be a list with elements \code{prime} and \code{drop}.
+#' the prime of the sequence and for the number of element dropped. Otherwise, \code{haltons} should
+#' be a list with elements \code{prime} and \code{drop},
 #' @param seed  the seed for the pseudo-random draws. This is only relevant if \code{haltons = NULL},
 #' @param correlation only relevant if \code{ranp} is not \code{NULL}. If \code{TRUE}, the correlation between random parameters is taken into account,
 #' @param panel if \code{TRUE} a panel data model is estimated,
-#' @param index a string indicating the id for individuals in the data. This argument is not required if data is a \code{pdata.frame} object,
+#' @param index a string indicating the `id' for individuals in the data. This argument is not required if data is a \code{pdata.frame} object,
 #' @param mvar only valid if \code{ranp} is not \code{NULL}. This is a named list, where the names correspond to the variables with random parameters, and the values correspond to the variables that enter in the mean of each random parameters,
 #' @param print.init if \code{TRUE}, the initial values for the optimization procedure are printed,
-#' @param init.ran initial value for standard deviation of random parameters. Default is 0.1,
+#' @param init.ran initial values for standard deviation of random parameters. Default is 0.1,
 #' @param gradient if \code{FALSE}, numerical gradients are used for the optimization procedure of models with random parameters,
 #' @param digits number of digits,
 #' @param width width,
 #' @param x,object and object of class \code{Rchoice},
-#' @param ... further arguments passed to \code{\link[maxLik]{maxLik}}.
+#' @param ... further arguments passed to \code{\link[maxLik]{maxLik}},
 #' @export
 #' @details
-#' The models are estimated using the \code{maxLik} function of \code{\link[maxLik]{maxLik}} package.
+#' The models are estimated using the \code{maxLik} function from \code{\link[maxLik]{maxLik}} package.
 #' 
 #' 
-#'  If \code{ranp} is not NULL, the random parameter (random coefficient) model is estimated.   
+#'  If \code{ranp} is not \code{NULL}, the random parameter  model is estimated.   
 #'  A random parameter model or random coefficient models permits regression parameter to 
 #'  vary across individuals according to some distribution. A fully parametric 
 #'  random parameter model specifies the latent variable  \eqn{y^{*}} conditional on regressors
 #'  \eqn{x} and given parameters \eqn{\beta_i} to have conditional density \eqn{f(y|x, \beta_i)} where
 #'  \eqn{\beta_i} are iid with density \eqn{g(\beta_i|\theta_i)}. The density is assumed a priori by the user by the argument
-#'  \code{ranp}. If the parameters are assumed to be normally distributed \eqn{\beta_i ~ N(\beta, \Sigma)}, then the random parameter 
-#'  are constructed as: \deqn{\beta_{ir}=\beta+L\omega_{ir}}
-#'  where \eqn{LL'=\Sigma} and \eqn{\omega_{ir}} is the {r}-th draw from standard normal distribution for individual \eqn{i}. 
+#'  \code{ranp}. If the parameters are assumed to be normally distributed \eqn{\beta_i ~ N(\beta, \Sigma)}, then the random parameter are constructed as: \deqn{\beta_{ir}=\beta+L\omega_{ir}} where \eqn{LL'=\Sigma} and \eqn{\omega_{ir}} is the {r}-th draw from standard normal distribution for individual \eqn{i}. 
 #'  
 #'  
 #'  Once the model is specified by the argument \code{family}, the model is estimated using 
-#'  Simulated Maximum Likelihood (SMLE). The probabilities, given by \eqn{f(y|x, \beta_i)}, are simulated using \code{R} pseudo-draws if \code{halton=NULL} or \code{R} halton
-#'  draws if \code{halton = NA}. The user can also specified the primes and the number of dropped elements for the halton draws.
-#'  For example, if the model consists of two random parameters, the user can specify \code{haltons = list("prime" = c(2, 3), "drop" = c(11, 11))}. 
+#'  Simulated Maximum Likelihood (SML). The probabilities, given by \eqn{f(y|x, \beta_i)}, are simulated using \code{R} pseudo-draws if \code{halton=NULL} or \code{R} halton draws if \code{halton = NA}. The user can also specified the primes and the number of dropped elements for the halton draws. For example, if the model consists of two random parameters, the user can specify \code{haltons = list("prime" = c(2, 3), "drop" = c(11, 11))}. 
 #'  
 #'  
 #'  A random parameter hierarchical model can be estimated by including heterogeneity in the mean of the 
@@ -77,7 +73,7 @@
 #' \item{call}{the matched call.}
 #' @aliases ordinal   
 #' @author Mauricio Sarrias \email{msarrias86@@gmail.com}
-#' @seealso \code{\link[mlogit]{mlogit}}, \code{\link[maxLik]{maxLik}}
+#' @seealso \code{\link[Rchoice]{cov.Rchoice}}, \code{\link[Rchoice]{plot.Rchoice}}, \code{\link[Rchoice]{effect.Rchoice}}
 #' @examples
 #' ## Probit model
 #' data("Workmroz")
@@ -96,11 +92,61 @@
 #' data = Health, family = ordinal('probit'), subset = year == 1988)
 #' summary(oprobit)
 #' 
-#' @references
-#' Greene, W. H. (2012). Econometric analysis. 7 edition. Prentice Hall.
+#' ## Poisson Model with Random Parameters
+#' \dontrun{
+#' poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
+#'                        data = Articles,  family = poisson,
+#'                        ranp = c(kid5 = "n", phd = "n", ment = "n"))
+#' summary(poisson.ran)                      
 #' 
-#' Train, K. (2009). Discretechoice methods with simulation. Cambridge university press.
-#' @import maxLik Formula 
+#' ## Poisson Model with Correlated Random Parameters
+#' poissonc.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
+#'                        data = Articles, 
+#'                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+#'                        family = poisson, 
+#'                        correlation =  TRUE)
+#' summary(poissonc.ran)
+#' 
+#' ## Hierarchical Poisson Model
+#' poissonH.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment | fem + phd,
+#'                        data = Articles,
+#'                        ranp = c(kid5 = "n", phd = "n", ment = "n"),
+#'                        mvar = list(phd = c("fem"), ment = c("fem", "phd")),
+#'                        family = poisson,
+#'                        R = 10)
+#' summary(poissonH.ran)
+#' 
+#' ## Probit Model with Random Effects and Random Parameters
+#' data('Unions', package = 'pglm')
+#' Unions$lwage <- log(Unions$wage)
+#' union.ran <- Rchoice(union ~ age + exper + rural + lwage,
+#'                      data = Unions[1:2000, ],
+#'                      family = binomial('probit'),
+#'                      ranp = c(constant = "n", lwage = "t"),
+#'                      R = 10,
+#'                      panel = TRUE,
+#'                      index = "id",
+#'                      print.init = TRUE)
+#' summary(union.ran)
+#' 
+#' ## Ordered Probit Model with Random Effects and Random Parameters
+#'oprobit.ran <- Rchoice(newhsat ~ age + educ + married + hhkids + linc,
+#'                      data = Health[1:2000, ],
+#'                      family = ordinal('probit'),
+#'                      ranp = c(constant = "n", hhkids = "n", linc = "n"),
+#'                      panel = TRUE,
+#'                      index = "id",
+#'                      R = 100,
+#'                      print.init = TRUE)
+#'summary(oprobit.ran)
+#'} 
+#'
+#' 
+#' @references
+#' Greene, W. H. (2012). Econometric Analysis. 7 edition. Prentice Hall.
+#' 
+#' Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge university press.
+#' @import maxLik Formula
 #' @importFrom plm pdata.frame
 Rchoice <- function(formula, data, subset, weights, na.action, family,
                     start = NULL, ranp = NULL, R = 40, haltons = NA, 

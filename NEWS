@@ -1,0 +1,19 @@
+THIS IS THE CHANGELOG OF THE "Rchoice" PACKAGE
+
+      CHANGES IN VERSION 0.2  (2014-12-16)
+
+* added a new function to compute the standard error of the variance-covariance matrix of random parameters
+
+* more flexibility to model hirarchical variables
+
+* added the Johnson's Sb function
+
+* added the rFormula and related functions
+
+* models allow panel data models
+
+* added new function to get the conditional mean of the random parameters for each individual
+
+* initial values for standard deviation of random parameters are set to 0.1. Previously was 0
+
+* slightly improved documentation

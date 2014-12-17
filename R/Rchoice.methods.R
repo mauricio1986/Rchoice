@@ -54,6 +54,7 @@ coef.Rchoice <- function(object, ...){
 }
 
 #' @rdname Rchoice
+#' @method nObs Rchoice
 #' @export nObs.Rchoice
 nObs.Rchoice <- function(x, ... ) {
   return(x$logLik$nobs)
@@ -97,7 +98,6 @@ update.Rchoice <- function (object, new, ...){
     call$formula <- update(formula(object), new)
   if(length(extras) > 0) {
     existing <- !is.na(match(names(extras), names(call)))
-    ## do these individually to allow NULL to remove entries.
     for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
     if(any(!existing)) {
       call <- c(as.list(call), extras[!existing])
@@ -110,12 +110,12 @@ update.Rchoice <- function (object, new, ...){
 #' Akaike's Information Criterion
 #' 
 #' Calculate Akaike's information Criterion (AIC) or the Bayesian
-#' information Criterion (BIC) for a model of object of class.
+#' information Criterion (BIC) for a model of class \code{Rchoice}.
 #' 
-#' @param object a fitted model of class \code{Rchoice}
-#' @param ... additional arguments to be passed to or from other functions
+#' @param object a fitted model of class \code{Rchoice},
+#' @param ... additional arguments to be passed to or from other functions,
 #' @param k a numeric value, use as penalty coefficient for number of parameters
-#' in the fitted model
+#' in the fitted model,
 #' @return a numeric value with the corresponding AIC or BIC value.
 #' @seealso \code{\link[Rchoice]{Rchoice}}
 #' @export AIC.Rchoice
@@ -129,7 +129,7 @@ update.Rchoice <- function (object, new, ...){
 #' AIC(probit)
 #' BIC(probit)
 AIC.Rchoice <- function(object, ..., k = 2) {
-  return(- 2 * object$logLik$maximum[[1]] + k* length(coef(object)) )
+  return(- 2 * object$logLik$maximum[[1]] + k * length(coef(object)))
 }
 
 #' @rdname AIC.Rchoice 
@@ -146,14 +146,12 @@ logLik.Rchoice <- function(object,...){
             nobs = nObs(object), class = "logLik")
 }
 
-
 #' Bread for sandwiches
 #' 
-#' Computes the bread of the sandwich covariance matrix
+#' Computes the bread of the sandwich covariance matrix for a model of class \code{Rchoice}
 #' 
-#' @param x a fitted model of class \code{Rchoice}
-#' @param ... Other arguments when \code{bread} is applied to another
-#' class object
+#' @param x a fitted model of class \code{Rchoice},
+#' @param ... Other arguments when \code{bread} is applied to another class object.
 #' @return the covariance matrix times observations
 #' @references Zeileis A (2006), Object-oriented Computation of Sandwich 
 #' Estimators. Journal of Statistical Software, 16(9), 1--16.
@@ -174,9 +172,9 @@ bread.Rchoice <- function( x, ... ) {
 
 #' Gradient for observations
 #' 
-#' It extracts the gradient for each observations evaluated at the estimated parameters
+#' It extracts the gradient for each observations evaluated at the estimated parameters for a model of class \code{Rchoice}
 #' 
-#' @param x a fitted model of class \code{Rchoice}
+#' @param x a fitted model of class \code{Rchoice},
 #' @param ... Other arguments when \code{estfun} is applied to another
 #' class object
 #' @return the gradient matrix of dimension n times k 
@@ -272,6 +270,22 @@ print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 2),
 #' @param obj a \code{Rchoice} object,
 #' @param alpha level of the confidence intervals,
 #' @param ... further arguments,
+#' 
+#' @details For more details see package \pkg{memisc}.
+#' @examples
+#' 
+#' ## Probit Model
+#' data("Workmroz")
+#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
+#'                  data = Workmroz, family = binomial('probit'))
+#' ## Logit Model
+#' logit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
+#'                  data = Workmroz, family = binomial('logit'))
+#'                  
+#' ## Table with Models
+#' library(memisc)
+#' mtable("Probit Model"= probit, "Logit Model" = logit, 
+#'        summary.stats = c("N", "Log-likelihood", "BIC", "AIC"))                 
 #' @export 
 getSummary.Rchoice <- function (obj, alpha = 0.05, ...){
   smry <- summary(obj)
@@ -295,7 +309,7 @@ getSummary.Rchoice <- function (obj, alpha = 0.05, ...){
 
 #' Plot of the distribution of conditional expectation of random parameters.
 #' 
-#' Plot the distribution of the conditional expectation of the random parameters or the compensating variations for objects of class \code{Rchoice}. 
+#' Plot the distribution of the conditional expectation of the random parameters or compensating variations for objects of class \code{Rchoice}. 
 #' 
 #' @param x a object of class \code{Rchoice},
 #' @param par a string giving the name of the variable with random parameter,
@@ -321,6 +335,29 @@ getSummary.Rchoice <- function (obj, alpha = 0.05, ...){
 #' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of different discrete choice models with individual parameters.
 #' @method plot Rchoice
 #' @export
+#' @examples
+#' \dontrun{
+#' ## Probit Model with Random Effects and Random Parameters
+#' data('Unions', package = 'pglm')
+#' Unions$lwage <- log(Unions$wage)
+#' union.ran <- Rchoice(union ~ age + exper + rural + lwage,
+#'                      data = Unions[1:2000, ],
+#'                      family = binomial('probit'),
+#'                      ranp = c(constant = "n", lwage = "t"),
+#'                      R = 10,
+#'                      panel = TRUE,
+#'                      index = "id",
+#'                      print.init = TRUE)
+#' 
+#' ## Plot the distribution of the conditional mean for lwage
+#' plot(union.ran, par = "lwage", type = "density")
+#' 
+#' ## Plot the conditional mean for the first 20 individuals
+#' plot(union.ran, par = "lwage", ind =  TRUE, id = 1:20, col = "blue")
+#' 
+#' ## Plot the compensating variation
+#' plot(union.ran, par = "lwage", effect = "cv", wrt = "rural", type = "histogram")
+#' }
 #' @importFrom plotrix plotCI
 plot.Rchoice <- function(x, par = NULL, effect = c("ce", "cv"), wrt = NULL,
                          type = c("density", "histogram"), adjust = 1, 
@@ -382,8 +419,8 @@ plot.Rchoice <- function(x, par = NULL, effect = c("ce", "cv"), wrt = NULL,
 #' These are a set of functions that help to extract the variance-covariance matrix, the correlation matrix, and the standard error of the random parameters for models of class \code{Rchoice}.
 #' 
 #' @param x a object of class \code{Rchoice} where \code{ranp} is not \code{NULL}, 
-#' @param sd if \code{TRUE}, then the standard deviations of the random parameters along with their standard errors are computed. 
-#' @param digits the number of digits.
+#' @param sd if \code{TRUE}, then the standard deviations of the random parameters along with their standard errors are computed,
+#' @param digits the number of digits,
 #' @param ... further arguments
 #' @return \code{cov.Rchoice} returns a matrix with the variance of the random parameters if model is fitted with random coefficients. If the model is fitted with \code{correlation = TRUE}, then the variance-covariance matrix is returned. 
 #' 
@@ -397,10 +434,26 @@ plot.Rchoice <- function(x, par = NULL, effect = c("ce", "cv"), wrt = NULL,
 #' \code{se.cov.Rchoice} function is a wrapper for \code{\link[msm]{deltamethod}} function of \pkg{msm} package.
 #' @references
 #' \itemize{
-#' \item Greene, W. H. (2012). Econometric analysis, Seventh Edition. Pearson Hall.
-#' \item Train, K. (2009). Discrete choice methods with simulation. Cambridge university press.
+#' \item Greene, W. H. (2012). Econometric Analysis, Seventh Edition. Pearson Hall.
+#' \item Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge university press.
 #' }
 #' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of discrete choice models with individual heterogeneity.
+#' @examples
+#' \dontrun{
+#' ## Estimate a poisson model with correlated random parameters
+#' data("Articles")
+#' poissonc.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
+#'                        data = Articles, 
+#'                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+#'                        family = poisson, 
+#'                        correlation =  TRUE)
+#'                        
+#' ## Functions for models with correlated random parameters 
+#' cov.Rchoice(poissonc.ran)
+#' cor.Rchoice(poissonc.ran)
+#' se.cov.Rchoice(poissonc.ran)
+#' se.cov.Rchoice(poissonc.ran, sd = TRUE)                     
+#' }
 #' @export
 cov.Rchoice <- function(x){
   if(!inherits(x, "Rchoice")) stop("not a \"Rchoice\" object")
@@ -439,13 +492,40 @@ cor.Rchoice <- function(x){
 
 #' Get the conditional individual coefficients
 #' 
-#' This a helper function to obtain the conditional estimate of the individual random parameters or the compensating variations.
+#' This a helper function to obtain the individuals' conditional estimate of the random parameters or compensating variations.
 #' @param x a object of class \code{Rchoice},
 #' @param par a string giving the name of the variable with random parameter,
-#' @param effect a string indicating what should be plotted: the conditional expectation of the individual coefficients "\code{ce}", or the conditional expectation of the individual compensating variations "\code{cv}",
-#' @param wrt a string indicating repect to which variable should be computed the compensating variation,
+#' @param effect a string indicating what should be computed: the conditional expectation of the individual coefficients "\code{ce}", or the conditional expectation of the individual compensating variations "\code{cv}",
+#' @param wrt a string indicating repect to which variable the compensating variation should be computed,
 #' @param ... further arguments. Ignored.
+#' 
+#' @return A named list where ``mean'' contains the individuals' conditional mean for the random parameter or compensating variation, and where `sd.est' contains their standard errors. 
 #' @export
+#' @references
+#' \itemize{
+#' \item Greene, W. H. (2012). Econometric Analysis, Seventh Edition. Pearson Hall.
+#' \item Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge university press.
+#' }
+#' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of different discrete choice models with individual parameters.
+#' @examples
+#' \dontrun{
+#' ## Probit Model with Random Effects and Random Parameters
+#' data('Unions', package = 'pglm')
+#' Unions$lwage <- log(Unions$wage)
+#' union.ran <- Rchoice(union ~ age + exper + rural + lwage,
+#'                      data = Unions[1:2000, ],
+#'                      family = binomial('probit'),
+#'                      ranp = c(constant = "n", lwage = "t"),
+#'                      R = 10,
+#'                      panel = TRUE,
+#'                      index = "id",
+#'                      print.init = TRUE)
+#' 
+#' ## Get the individuals' conditional mean and their standard errors for lwage                      
+#' bi.wage <- effect.Rchoice(union.ran, par = "lwage", effect = "ce")
+#' summary(bi.wage$mean)
+#' summary(bi.wage$sd.est)
+#' }
 effect.Rchoice <- function(x, par = NULL, effect = c("cv", "ce"), wrt = NULL, ... ){
   if (!inherits(x, "Rchoice")) stop("not a \"Rchoice\" object")
   type <- match.arg(effect)

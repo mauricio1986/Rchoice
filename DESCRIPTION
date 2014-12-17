@@ -4,18 +4,24 @@ Title: Discrete Choice (Binary, Poisson and Ordered) Models with Random
 Version: 0.2
 Author: Mauricio Sarrias <msarrias86@gmail.com>
 Maintainer: Mauricio Sarrias <msarrias86@gmail.com>
-Description: Estimate binary, ordered and count models with random parameters.
+Description: Estimate Binary (Probit and Logit), Ordered (Probit and Logit) and
+    Poisson models with random parameters using Simulated Maximum Likelihood.
+    Rchoice handles cross-sectional and panel databases.
 Depends:
-    R (>= 2.10),
+    R (>= 3.1.2),
+    Formula,
     maxLik,
-    Formula
 Imports:
+    msm,
     plm,
-    plotrix,
-    msm
+    plotrix
 Suggests:
-    sandwich,
+    car,
     lmtest,
-    car
+    memisc,
+    pglm,
+    sandwich,
+    knitr
+VignetteBuilder: knitr
 License: GPL (>= 2)
 LazyData: no

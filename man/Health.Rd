@@ -18,7 +18,7 @@ German Health Care Data, unbalanced panel.
     \item{\code{hsat}}{health satisfaction, 0 (low),...,10 (high)}
     \item{\code{handdum}}{handicapped = 1, 0 otherwise}
     \item{\code{handper}}{degree of handicap in percent; 0,100}
-    \item{\code{hhinc}}{household nomial monthly net income in German marks/10,000}
+    \item{\code{hhinc}}{household nomial monthly net income in German marks}
     \item{\code{hhkids}}{children under age 16 in the household = 1; otherwise = 0}
     \item{\code{educ}}{years of schooling}
     \item{\code{married}}{married =1, otherwise = 0}
