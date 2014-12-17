@@ -483,13 +483,13 @@ Rchoice <- function(formula, data, subset, weights, na.action, family,
  logLik <- structure(list(
                     maximum     = logLik(x),
                     gradient    = x$gradient,
-                    nobs        = nObs(x),
+                    nobs        = nrow(X),
                     gradientObs = x$gradientObs,
                     hessian     = hessian(x),
                     iterations  = nIter(x),
                     type        = maximType(x),
                     code        = returnCode(x),
-                    nparam      = nParam(x),
+                    nparam      = length(x$estimate),
                     message     = returnMessage(x)),
                     class = "logLik"
                    )

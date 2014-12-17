@@ -135,7 +135,7 @@ AIC.Rchoice <- function(object, ..., k = 2) {
 #' @rdname AIC.Rchoice 
 #' @export BIC.Rchoice
 BIC.Rchoice <- function( object, ...) {
-  return(AIC(object, k = log(nObs(object))) )
+  return(AIC(object, k = log(object$logLik$nobs)) )
 }
 
 #' @rdname Rchoice
@@ -143,7 +143,7 @@ BIC.Rchoice <- function( object, ...) {
 #' @export
 logLik.Rchoice <- function(object,...){
   structure(object$logLik$maximum[[1]], df = length(object$coefficients),
-            nobs = nObs(object), class = "logLik")
+            nobs = object$logLik$nobs, class = "logLik")
 }
 
 #' Bread for sandwiches
@@ -167,7 +167,7 @@ logLik.Rchoice <- function(object,...){
 #' bread(probit) 
 
 bread.Rchoice <- function( x, ... ) {
-  return( vcov( x ) * nObs(x))
+  return( vcov( x ) * x$logLik$nobs)
 }
 
 #' Gradient for observations
@@ -294,7 +294,7 @@ getSummary.Rchoice <- function (obj, alpha = 0.05, ...){
   upper <- coef[, 1] + coef[, 2] * qnorm(alpha/2)
   coef <- cbind(coef, lower, upper)
   colnames(coef) <- c("est", "se", "stat", "p", "lwr", "upr")
-  N <-  nObs(obj)
+  N <-  obj$logLik$nobs
   ll <- logLik(obj)
   sumstat <- c(logLik = ll, deviance = NA, AIC = AIC(obj), BIC = BIC(obj), N = N, 
                LR = NA, df = NA, p = NA, Aldrich.Nelson = NA, McFadden = NA, Cox.Snell = NA,
