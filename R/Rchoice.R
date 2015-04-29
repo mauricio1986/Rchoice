@@ -73,7 +73,7 @@
 #' \item{call}{the matched call.}
 #' @aliases ordinal   
 #' @author Mauricio Sarrias \email{msarrias86@@gmail.com}
-#' @seealso \code{\link[Rchoice]{cov.Rchoice}}, \code{\link[Rchoice]{plot.Rchoice}}, \code{\link[Rchoice]{effect.Rchoice}}
+#' @seealso \code{\link[Rchoice]{plot.Rchoice}}, \code{\link[Rchoice]{effect.Rchoice}}
 #' @examples
 #' ## Probit model
 #' data("Workmroz")

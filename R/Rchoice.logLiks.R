@@ -472,7 +472,8 @@ lnordered.ran <- function(theta, y, X, S = NULL, ranp, R, correlation, link,
   
   ## Gradients
   if (gradient){
-    phi1     <- dfun(eta1) ; phi2 <- dfun(eta2)
+    phi1     <- pmax(dfun(eta1), .Machine$double.eps)
+    phi2     <- pmax(dfun(eta2), .Machine$double.eps) 
     lambda   <- (phi2 - phi1) / pmax(Pitr, .Machine$double.eps)
     Qir      <- Pir / (Pi * R)
     if (panel) Qir <- Qir[as.character(id), ]

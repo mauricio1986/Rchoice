@@ -1,0 +1,143 @@
+library(Rchoice)
+library(Rchoice)#
+#
+## Globals#
+rm(list = ls())#
+set.seed(123)#
+N <- 1000#
+T <- 3#
+#
+## Variables#
+x1 <- runif(N * T)#
+x2 <- runif(N * T)#
+id <- rep(1:N, each = T)#
+#
+## Coefficients#
+b1   <- -2 + 1 * rnorm(N)#
+b2   <-  2 + 1 * rnorm(N)#
+rand <-  1 * rnorm(N)#
+#
+## Latent Process#
+z <- rand[id] + b1[id] * x1 + b2[id] * x2 + rnorm(N * T)#
+y <- z ; y[z <= -2] <- 1; y[z > -2 & z <= 1] <- 2; #Cuttoff -2,1,2#
+y[z >1 & z <= 2] <- 3; y[z > 2]<-4#
+table(y)#
+#
+# Data#
+data <- data.frame(y, x1, x2, id)#
+#
+## Estimate the Model#
+out <- Rchoice(y ~ x1 + x2, #
+               data = data, #
+               family = ordinal('probit'), #
+               ranp = c(constant = "n", x1 = "n", x2 = "n"),#
+               print.level = 1, #
+               R = 100,#
+               panel = TRUE,#
+               index = "id")#
+summary(out)
+## Globals#
+rm(list = ls())#
+set.seed(123)#
+N <- 1000#
+T <- 100#
+#
+## Variables#
+x1 <- runif(N * T)#
+x2 <- runif(N * T)#
+id <- rep(1:N, each = T)#
+#
+## Coefficients#
+b1   <- -2 + 1 * rnorm(N)#
+b2   <-  2 + 1 * rnorm(N)#
+rand <-  1 * rnorm(N)#
+#
+## Latent Process#
+z <- rand[id] + b1[id] * x1 + b2[id] * x2 + rnorm(N * T)#
+y <- z ; y[z <= -2] <- 1; y[z > -2 & z <= 1] <- 2; #Cuttoff -2,1,2#
+y[z >1 & z <= 2] <- 3; y[z > 2]<-4#
+table(y)#
+#
+# Data#
+data <- data.frame(y, x1, x2, id)#
+#
+## Estimate the Model#
+out <- Rchoice(y ~ x1 + x2, #
+               data = data, #
+               family = ordinal('probit'), #
+               ranp = c(constant = "n", x1 = "n", x2 = "n"),#
+               print.level = 1, #
+               R = 100,#
+               panel = TRUE,#
+               index = "id")#
+summary(out)
+x
+## Globals#
+rm(list = ls())#
+set.seed(123)#
+N <- 1000#
+T <- 100#
+#
+## Variables#
+x1 <- runif(N * T)#
+x2 <- runif(N * T)#
+id <- rep(1:N, each = T)#
+#
+## Coefficients#
+b1   <- -2 + 1 * rnorm(N)#
+b2   <-  2 + 1 * rnorm(N)#
+rand <-  1 * rnorm(N)#
+#
+## Latent Process#
+z <- rand[id] + b1[id] * x1 + b2[id] * x2 + rnorm(N * T)#
+y <- z ; y[z <= -2] <- 1; y[z > -2 & z <= 1] <- 2; #Cuttoff -2,1,2#
+y[z >1 & z <= 2] <- 3; y[z > 2]<-4#
+table(y)#
+#
+# Data#
+data <- data.frame(y, x1, x2, id)#
+#
+## Estimate the Model#
+out <- Rchoice(y ~ x1 + x2, #
+               data = data, #
+               family = ordinal('probit'), #
+               ranp = c(constant = "n", x1 = "n", x2 = "n"),#
+               print.level = 1, #
+               R = 100,#
+               panel = TRUE,#
+               index = "id")#
+summary(out)
+rm(list = ls())#
+set.seed(123)#
+N <- 500#
+T <- 100#
+#
+## Variables#
+x1 <- rnorm(N * T)#
+x2 <- rnorm(N * T)#
+id <- rep(1:N, each = T)#
+#
+## Coefficients#
+b1   <-  exp(1  +  1 * rnorm(N))#
+b2   <-  -1  +  1 * rnorm(N)#
+rand <-  0.5 +  1 * rnorm(N)#
+#
+## Latent Process#
+ystar <- rand[id] + b1[id] * x1 + b2[id] * x2 + rnorm(N * T)#
+y <- as.numeric(ystar > 0)#
+table(y)#
+#
+## Data#
+data <- data.frame(y, x1, x2, id)#
+#
+## Estimate the model#
+out <- Rchoice(y ~ x1 + x2, #
+               data = data, #
+               family = binomial('probit'), #
+               ranp = c(constant = "n", x1 = "ln", x2 = "n"), #
+               R = 100 , #
+               print.level = 2,#
+               print.init = TRUE,#
+               panel = TRUE,#
+               index = "id")#
+summary(out)

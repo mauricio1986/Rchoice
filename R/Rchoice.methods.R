@@ -22,27 +22,54 @@ model.matrix.Rchoice <- function(object, ...){
   X
 }
 
-#' @rdname Rchoice
+#' vcov method for Rchoice objects
+#' 
+#' The \code{vcov} method for \code{Rchoice} objects extracts the covariance matrix of the coefficients or the random parameters. It also allows to get the standard errors for the variance-covariance matrix of the random parameters
+#' 
+#' @param object a fitted model of class \code{Rchoice},
+#' @param what indicates which covariance matrix has to be extracted. The default is \code{coefficient}, in this case the \code{vcov} behaves as usual. If \code{what = "ranp"} the covariance matrix of the random parameters is returned as default, 
+#' @param type if the model is estimated with random parameters, then this argument indicates what matrix should be returned. If \code{type = "cov"}, then the covariance matrix of the random parameters is returned; if \code{type = "cor"} then the correlation matrix of the random parameters is returned; if \code{type = "sd"} then the standard deviation of the random parameters is returned,
+#' @param se if \code{TRUE} \code{type = "cov"} then the standard error of the covariance matrix of the random parameters is returned; if \code{TRUE} \code{type = "sd"} the standard error of the standard deviation of the random parameter is returned. This argument if valid only if the model is estimated using correlated random parameters,
+#' @param digits number of digits,
+#' @param ... further arguments
+#' @details This new interface replaces the \code{cor.Rchoice}, \code{cov.Rchoice} and \code{se.cov.Rchoice} functions which are deprecated.
+#' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of discrete choice models with random parameters.
 #' @method vcov Rchoice
 #' @export
-vcov.Rchoice <- function(object,...)
-{  
-  H <- object$logLik$hessian
-  if(object$family == "ordinal"){
-    bhat  <- coef(object)
-    ahat  <- attr(object$coefficients, "alphas")
-    J     <- length(ahat)
-    A     <- diag(length(bhat))
-    z.id  <- seq(1, J, 1)
-    Jacob <- jacobian(ahat)
-    A[z.id, z.id] <- Jacob
-    vcov <- A %*% solve(-H) %*% t(A)
-    rownames(vcov) <- colnames(vcov) <- names(bhat)
-  } else {
-  vcov <- (solve(-H))
-  rownames(vcov) <- colnames(vcov) <- names(coef(object))
+vcov.Rchoice <- function(object, what = c('coefficient', 'ranp'), type = c('cov', 'cor', 'sd'), 
+                         se = FALSE, digits = max(3, getOption("digits") - 2), ...)
+{
+  what <- match.arg(what)
+  type <- match.arg(type)
+  if (what == 'coefficient'){
+    H <- object$logLik$hessian
+    if(object$family == "ordinal"){
+      bhat  <- coef(object)
+      ahat  <- attr(object$coefficients, "alphas")
+      J     <- length(ahat)
+      A     <- diag(length(bhat))
+      z.id  <- seq(1, J, 1)
+      Jacob <- jacobian(ahat)
+      A[z.id, z.id] <- Jacob
+      result <- A %*% solve(-H) %*% t(A)
+      rownames(result) <- colnames(result) <- names(bhat)
+    } else {
+      result <- (solve(-H))
+      rownames(result) <- colnames(result) <- names(coef(object))
+    }
+    return(result)
   }
-  return(vcov)
+  if (what == 'ranp'){
+    if (se){
+      if (type == 'cov') se.cov.Rchoice(object, sd = FALSE, digits = digits)
+      if (type == 'sd')  se.cov.Rchoice(object, sd = TRUE, digits = digits)
+      if (type == 'cor') stop("standard error for correlation coefficients not implemented yet")
+    } else {
+      if (type == 'cov') print(cov.Rchoice(object)) 
+      if (type == 'cor') print(cor.Rchoice(object))
+      if (type == 'sd')  print(sqrt(diag(cov.Rchoice(object))))
+    }
+  }
 }
 
 #' @rdname Rchoice
@@ -118,7 +145,9 @@ update.Rchoice <- function (object, new, ...){
 #' in the fitted model,
 #' @return a numeric value with the corresponding AIC or BIC value.
 #' @seealso \code{\link[Rchoice]{Rchoice}}
-#' @export AIC.Rchoice
+#' @importFrom stats AIC
+#' @method AIC Rchoice
+#' @export
 #' @examples
 #' ## Probit model
 #' data("Workmroz")
@@ -133,7 +162,9 @@ AIC.Rchoice <- function(object, ..., k = 2) {
 }
 
 #' @rdname AIC.Rchoice 
-#' @export BIC.Rchoice
+#' @importFrom stats BIC
+#' @method BIC Rchoice
+#' @export 
 BIC.Rchoice <- function( object, ...) {
   return(AIC(object, k = log(object$logLik$nobs)) )
 }
@@ -212,13 +243,13 @@ print.Rchoice <- function(x, digits = max(3,getOption("digits")-3),
 #' @rdname Rchoice
 #' @method summary Rchoice
 #' @export
-summary.Rchoice <- function (object,...){
+summary.Rchoice <- function (object, ...){
   b <- object$coefficients
   std.err <- sqrt(diag(vcov(object)))
   z <- b / std.err
   p <- 2 * (1 - pnorm(abs(z)))
   CoefTable <- cbind(b, std.err, z, p)
-  colnames(CoefTable) <- c("Estimate", "Std. Error", "t-value", "Pr(>|t|)")
+  colnames(CoefTable) <- c("Estimate", "Std. Error", "z-value", "Pr(>|z|)")
   object$CoefTable    <- CoefTable
   
   class(object) <- c("summary.Rchoice","Rchoice")
@@ -228,7 +259,7 @@ summary.Rchoice <- function (object,...){
 #' @rdname Rchoice
 #' @method print summary.Rchoice
 #' @export
-print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 2),
+print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 3),
                                  width = getOption("width"),
                                  ...)
 {
@@ -624,7 +655,7 @@ se.cov.Rchoice <- function(x, sd =  FALSE, digits = max(3, getOption("digits") -
   tableChol <- cbind(b, std.err, z, p)
   if(!sd) cat(paste("\nElements of the variance-covariance matrix \n\n"))
   else cat(paste("\nStandard deviations of the random parameters \n\n"))
-  colnames(tableChol) <- c("Estimate", "Std. Error", "t-value", "Pr(>|t|)") 
+  colnames(tableChol) <- c("Estimate", "Std. Error", "z-value", "Pr(>|z|)") 
   printCoefmat(tableChol, digits =  digits)
 }
 

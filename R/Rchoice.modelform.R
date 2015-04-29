@@ -49,7 +49,8 @@ model.frame.rFormula <- function(formula, data, ..., lhs = NULL, rhs = NULL){
   if (is.null(lhs)) lhs <- ifelse(length(formula)[1] > 0, 1, 0)
   index <- attr(data, "index")
   mf <- model.frame(as.Formula(formula), as.data.frame(data), ..., rhs = rhs)
-  index <- index[as.numeric(rownames(mf)), ]
+  if(!is.null(index)) rownames(index) <- rownames(mf)
+  index <- index[rownames(mf), ]
   index <- data.frame(lapply(index , function(x) x[drop = TRUE]), row.names = rownames(index))
   structure(mf,
             index = index,
