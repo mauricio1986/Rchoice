@@ -1,9 +1,10 @@
-# README #
+# Rchoice #
 
 Rchoice  is a package in R for estimating Ordered, Binary and Poisson models with random parameters for cross-sectional and panel data.
 
-### What is this repository for? ###
+### What kind of models can be estimated? ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+* Binary (Logit/Probit), Ordered (Logit/Probit) and Poisson Models with fixed (non-stochastic) parameters
+* Binary (Logit/Probit), Ordered (Logit/Probit) and Poisson models with random coefficients. The distribution of the coefficients can be normal, log-normal, truncated normal, triangular, uniform and Johnson Sb.
+* Random Effects model for Panel or longitudinal data
+* Estimate the conditional individual-specific coefficient
