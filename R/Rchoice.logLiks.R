@@ -461,9 +461,10 @@ lnordered.ran <- function(theta, y, X, S = NULL, ranp, R, correlation, link,
   }
   
   index    <- if (fixed) ZB + XB else XB
-  eta1     <- kappa[y + 1] - index
-  eta2     <- kappa[y]   - index
+  eta1     <- pmin(kappa[y + 1] - index, 100)
+  eta2     <- pmax(kappa[y]   - index, -100)
   Pitr      <- pfun(eta1) - pfun(eta2)
+  #Pitr <- pfun(pmin(100, eta1)) - pfun(pmax(-100, eta2))
   if (panel) Pir <- apply(Pitr, 2, tapply, id, prod) else Pir <- Pitr
   Pir      <- pmax(Pir, .Machine$double.eps)
   Pi       <- rowSums(Pir) / R
@@ -473,8 +474,11 @@ lnordered.ran <- function(theta, y, X, S = NULL, ranp, R, correlation, link,
   ## Gradients
   if (gradient){
     phi1     <- pmax(dfun(eta1), .Machine$double.eps)
-    phi2     <- pmax(dfun(eta2), .Machine$double.eps) 
+    phi2     <- pmax(dfun(eta2), .Machine$double.eps)
+    #phi1     <- dfun(eta1)
+    #phi2     <- dfun(eta2)
     lambda   <- (phi2 - phi1) / pmax(Pitr, .Machine$double.eps)
+    #lambda   <- (phi2 - phi1) / Pitr
     Qir      <- Pir / (Pi * R)
     if (panel) Qir <- Qir[as.character(id), ]
     eta      <- Qir * lambda
@@ -484,6 +488,7 @@ lnordered.ran <- function(theta, y, X, S = NULL, ranp, R, correlation, link,
       gkappa[[j]] <- matrix(NA, N, R)
       gkappa[[j]] <- drop(deltaj[ , j]) * (phi1 / pmax(Pitr, .Machine$double.eps)) - 
         drop(deltak[ ,j]) * (phi2 / pmax(Pitr, .Machine$double.eps))
+      #gkappa[[j]] <- drop(deltaj[ , j]) * (phi1 / Pitr) - drop(deltak[ , j]) * (phi2 / Pitr)
     }
     gkappa <- lapply(gkappa, function(x) x * Qir)
     gkappa <- lapply(gkappa, function(x) apply(x, 1, sum))
