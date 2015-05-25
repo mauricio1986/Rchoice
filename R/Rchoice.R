@@ -376,7 +376,7 @@ Rchoice <- function(formula, data, subset, weights, na.action, family,
   }
   
   ## Check if some variable is log-normal or Johnson Sb
-  if(R.model && !is.null(start)){
+  if(R.model && is.null(start)){
     if (any(ranp == "ln")){
       ln <- paste('mean', names(ranp[ranp == "ln"]), sep = '.')
       if (sum(theta[ln] < 0) >= 1)  stop("Some variables specified as ln have negative values in the non-random parameter model. Try using the negative of the variable.")
