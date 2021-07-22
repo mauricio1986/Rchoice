@@ -2,6 +2,41 @@
 \title{Rchoice News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.3-4}{
+\subsection{NEW FEATURES}{
+    \itemize{
+      \item Fixing bug with mtable.
+    }
+  }  
+}
+
+\section{CHANGES IN VERSION 0.3-3}{
+\subsection{NEW FEATURES}{
+    \itemize{
+      \item Add hetprob function to estimate heterokedastic binary models.
+      \item Add ivplm function to estimatate instrumental variables probit model by Maximum Likelihood.
+      \item Fix minor bug in the \code{model.frame.rFormula} function with new update of \pkg{plm}. 
+      \item Slightly improved documentation. 
+    }
+  }  
+}
+
+\section{CHANGES IN VERSION 0.3-2}{
+\subsection{NEW FEATURES}{
+    \itemize{
+      \item Fixing errors and warnings
+    }
+  }  
+}
+
+\section{CHANGES IN VERSION 0.3-1}{
+\subsection{NEW FEATURES}{
+    \itemize{
+      \item Including CITATION
+    }
+  }  
+}
+
 \section{CHANGES IN VERSION 0.3}{
   \subsection{FIXED BUGS}{
     \itemize{

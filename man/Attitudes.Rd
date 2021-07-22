@@ -12,15 +12,15 @@ evaluate the following statement: "A working mother can establish
 }
 \usage{data(Attitudes)}
 \format{
-  A data frame with 2293 observations on the following 10 variables.
+  A data frame with 2293 observations on the following 10 variables:
   \describe{
-    \item{\code{warm}}{1 = Strongly disagree, 2 = disagree, 3 = agree, 4 = strongly agree}
-    \item{\code{yr89}}{survey year: 1 =  1989; 0 = 1977}
-    \item{\code{male}}{1 = male; 0 = female}
-    \item{\code{white}}{1 = white; 0 = nonwhite}
-    \item{\code{age}}{age in years}
-    \item{\code{ed}}{years of education}
-    \item{\code{prst}}{occupational prestige}
+    \item{\code{warm}}{1 = Strongly disagree, 2 = disagree, 3 = agree, 4 = strongly agree,}
+    \item{\code{yr89}}{survey year: 1 =  1989; 0 = 1977,}
+    \item{\code{male}}{1 = male; 0 = female,}
+    \item{\code{white}}{1 = white; 0 = nonwhite,}
+    \item{\code{age}}{age in years,}
+    \item{\code{ed}}{years of education,}
+    \item{\code{prst}}{occupational prestige,}
   }
 }
 

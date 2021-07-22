@@ -39,3 +39,47 @@ make.add <- function(row, col, Ka){
   }
   form
 }
+
+# Added in version 0.3-3 for marginal effects
+make.inter.num  <- function(the.var, beta, beta.hat, X){
+  b             <-  if (the.var %in% beta)  beta.hat[beta   %in% the.var] else 0
+  # Interactions
+  all.interact  <- beta[grepl(":", beta, fixed = TRUE)]
+  interactions  <- all.interact[grepl(the.var, all.interact, fixed = TRUE)]
+  xinteractions <- gsub(paste(":", the.var, "|", the.var, ":", sep = ""), "", interactions)
+  if (length(xinteractions) > 0) {
+    bint <- X[, xinteractions, drop = F] %*% beta.hat[interactions] 
+  } else {
+    bint <- 0
+  }
+  # Quadratics
+  quadratics <- beta.hat[grepl(paste(the.var, "^2", sep = ""), beta, fixed = TRUE)]
+  if (length(quadratics) > 0){
+    bsq <- 2 * quadratics * X[, the.var, drop = TRUE]
+  } else {
+    bsq <- 0
+  }
+  bk <- b + bint + bsq
+  return(as.vector(bk))
+}
+
+make.inter.factor <- function(the.var, beta, levs){
+  lev           <- levs
+  the.vars      <- paste0("factor(",the.var,")",lev, sep = "")
+  names.b       <- unlist(beta[beta %in% the.vars])
+  all.interact  <- beta[grepl(":", beta)]
+  interactions  <- all.interact[unlist(lapply(lev, function(x)
+    grep(paste0("factor\\(", the.var, "\\)", x), all.interact)))]
+  if (length(interactions) > 0){
+    temp <- paste0("factor\\(", the.var, "\\)", lev, ":", "|", ":", 
+                   "factor\\(", the.var, "\\)", lev, collapse = "|") 
+    xinteractions <- gsub(temp, 
+                          "", interactions)
+  } else {
+    interactions  <- NULL
+    xinteractions <- NULL
+  }
+  names       <- c(names.b, interactions)
+  names.inter <- c(names.b, xinteractions) 
+  return(list(names = names, names.inte = names.inter))
+}

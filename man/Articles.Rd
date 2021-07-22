@@ -9,14 +9,14 @@ Data from research by Long(1990) that analizes the scientist's level of publicat
 }
 \usage{data(Articles)}
 \format{
-  A data frame with 915 observations on the following 6 variables.
+  A data frame with 915 observations on the following 6 variables:
   \describe{
-    \item{\code{art}}{Articles during last 3 years of Ph.D.}
-    \item{\code{fem}}{1 if female scientist; else 0}
-    \item{\code{mar}}{1 if married; else 0}
-    \item{\code{kid5}}{Number of children 5 or younger}
-    \item{\code{phd}}{Prestige of Ph.D. department}
-    \item{\code{ment}}{Articles by mentor during last 3 years}
+    \item{\code{art}}{Articles during last 3 years of Ph.D.,}
+    \item{\code{fem}}{1 if female scientist; else 0,}
+    \item{\code{mar}}{1 if married; else 0,}
+    \item{\code{kid5}}{Number of children 5 or younger,}
+    \item{\code{phd}}{Prestige of Ph.D. department,}
+    \item{\code{ment}}{Articles by mentor during last 3 years,}
   }
 }
 

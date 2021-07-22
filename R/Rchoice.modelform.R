@@ -32,7 +32,7 @@ rFormula.formula <- function(object){
 
 rFormula <- function(object){
   stopifnot(inherits(object, "formula"))
-  if (!inherits(object, "Formula")) object <- Formula(object)
+  if (!inherits(object, "Formula"))  object <- Formula(object)
   if (!inherits(object, "rFormula")) class(object) <- c("rFormula", class(object))
   object
 }
@@ -43,15 +43,19 @@ as.Formula.rFormula <- function(x, ...){
 }
 
 #' @rdname rFormula
+#' @import stats
 #' @export
 model.frame.rFormula <- function(formula, data, ..., lhs = NULL, rhs = NULL){
   if (is.null(rhs)) rhs <- 1:(length(formula)[2])
-  if (is.null(lhs)) lhs <- ifelse(length(formula)[1] > 0, 1, 0)
+  # Change due to conflict with plm
+  if (is.null(lhs)) lhs <- if(length(formula)[1L] > 0) 1 else 0
+  #if (is.null(lhs)) lhs <- ifelse(length(formula)[1] > 0, 1, 0)
   index <- attr(data, "index")
-  mf <- model.frame(as.Formula(formula), as.data.frame(data), ..., rhs = rhs)
-  if(!is.null(index)) rownames(index) <- rownames(mf)
+  mf    <- model.frame(as.Formula(formula), as.data.frame(data), ..., rhs = rhs)
+  if (!is.null(index)) rownames(index) <- rownames(mf)
   index <- index[rownames(mf), ]
   index <- data.frame(lapply(index , function(x) x[drop = TRUE]), row.names = rownames(index))
+  class(index) <- c("pindex", class(index))
   structure(mf,
             index = index,
             class = c("pdata.frame", class(mf)))
@@ -62,14 +66,17 @@ has.intercept <- function(object, ...) {
   UseMethod("has.intercept")
 }
 
+#'@import stats
 has.intercept.default <- function(object, ...) {
   has.intercept(formula(object), ...)
 }
 
+#'@import stats
 has.intercept.formula <- function(object, ...) {
   attr(terms(object), "intercept") == 1L
 }
 
+#'@import stats
 has.intercept.Formula <- function(object, rhs = NULL, ...) {
   if (is.null(rhs)) rhs <- 1:length(attr(object, "rhs"))
   sapply(rhs, function(x) has.intercept(formula(object, lhs = 0, rhs = x)))
@@ -85,20 +92,21 @@ has.intercept.rFormula <- function(object, ...){
 ## model matrix
 
 #'@rdname rFormula
+#'@import stats
 #'@export
 model.matrix.rFormula <- function(object, data, rhs = NULL, ...){
   index <- attr(data, "index")
   if (is.null(rhs)) rhs <- 1
   
-  if (rhs == 1){
+  if (rhs == 1) {
     formula <- formula(object, rhs = 1, lhs = 0) # Normal covariates
     X <- model.matrix(formula, data)
   }
-  if (rhs == 2){
+  if (rhs == 2) {
     for.ind.esp <- formula(object, rhs = 2, lhs = 0)
     has.int <- has.intercept(for.ind.esp, rhs = 2)
-    if (has.int) for.ind.esp <- update(for.ind.esp, ~ . -1)
-    if(length(index) != 0L){
+    if (has.int) for.ind.esp <- update(for.ind.esp, ~ . - 1)
+    if (length(index) != 0L) { 
       id <- index[[1]]
       indata <- data[!duplicated(id), ]
       X <- model.matrix(for.ind.esp, indata)

@@ -1,0 +1,20 @@
+bibentry(bibtype = "Article",
+  title        = "Discrete Choice Models with Random Parameters in {R}: The {Rchoice} Package",
+  author       = person(given = "Mauricio",
+                        family = "Sarrias",
+                        email = "mauricio.sarrias@ucn.cl"),
+  journal      = "Journal of Statistical Software",
+  year         = "2016",
+  volume       = "74",
+  number       = "10",
+  pages        = "1--31",
+  doi          = "10.18637/jss.v074.i10",
+
+  header       = "To cite Rchoice in publications use:",
+  textVersion  =
+  paste("Mauricio Sarrias (2016).",
+        "Discrete Choice Models with Random Parameters in R: The Rchoice Package.",
+        "Journal of Statistical Software, 74(10), 1-31.",
+        "doi:10.18637/jss.v074.i10")
+)
+

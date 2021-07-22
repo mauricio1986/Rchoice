@@ -14,7 +14,7 @@ terms.Rchoice <- function(x, ...){
 #' @export
 model.matrix.Rchoice <- function(object, ...){
   X <- model.matrix(object$formula, object$mf)
-  if (has.intercept(object$formula, rhs = 1)){
+  if (has.intercept(object$formula, rhs = 1)) {
     namesX <- colnames(X)
     namesX[1L] <- "constant"
     colnames(X) <- namesX
@@ -27,23 +27,26 @@ model.matrix.Rchoice <- function(object, ...){
 #' The \code{vcov} method for \code{Rchoice} objects extracts the covariance matrix of the coefficients or the random parameters. It also allows to get the standard errors for the variance-covariance matrix of the random parameters
 #' 
 #' @param object a fitted model of class \code{Rchoice},
-#' @param what indicates which covariance matrix has to be extracted. The default is \code{coefficient}, in this case the \code{vcov} behaves as usual. If \code{what = "ranp"} the covariance matrix of the random parameters is returned as default, 
+#' @param what indicates which covariance matrix has to be extracted. The default is \code{coefficient}. In this case the \code{vcov} behaves as usual. If \code{what = "ranp"} the covariance matrix of the random parameters is returned as default, 
 #' @param type if the model is estimated with random parameters, then this argument indicates what matrix should be returned. If \code{type = "cov"}, then the covariance matrix of the random parameters is returned; if \code{type = "cor"} then the correlation matrix of the random parameters is returned; if \code{type = "sd"} then the standard deviation of the random parameters is returned,
-#' @param se if \code{TRUE} \code{type = "cov"} then the standard error of the covariance matrix of the random parameters is returned; if \code{TRUE} \code{type = "sd"} the standard error of the standard deviation of the random parameter is returned. This argument if valid only if the model is estimated using correlated random parameters,
+#' @param se if \code{TRUE} and \code{type = "cov"} then the standard error of the covariance matrix of the random parameters is returned; if \code{TRUE} and \code{type = "sd"} the standard error of the standard deviation of the random parameter is returned. This argument if valid only if the model is estimated using correlated random parameters,
 #' @param digits number of digits,
+#' @param x a fitted model of class \code{Rchoice},
+#' @param sd if \code{TRUE}, then the standard deviation of the random parameters are returned,
 #' @param ... further arguments
 #' @details This new interface replaces the \code{cor.Rchoice}, \code{cov.Rchoice} and \code{se.cov.Rchoice} functions which are deprecated.
 #' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of discrete choice models with random parameters.
 #' @method vcov Rchoice
+#' @import stats
 #' @export
 vcov.Rchoice <- function(object, what = c('coefficient', 'ranp'), type = c('cov', 'cor', 'sd'), 
                          se = FALSE, digits = max(3, getOption("digits") - 2), ...)
 {
   what <- match.arg(what)
   type <- match.arg(type)
-  if (what == 'coefficient'){
+  if (what == 'coefficient') {
     H <- object$logLik$hessian
-    if(object$family == "ordinal"){
+    if (object$family == "ordinal"){
       bhat  <- coef(object)
       ahat  <- attr(object$coefficients, "alphas")
       J     <- length(ahat)
@@ -59,8 +62,8 @@ vcov.Rchoice <- function(object, what = c('coefficient', 'ranp'), type = c('cov'
     }
     return(result)
   }
-  if (what == 'ranp'){
-    if (se){
+  if (what == 'ranp') {
+    if (se) {
       if (type == 'cov') se.cov.Rchoice(object, sd = FALSE, digits = digits)
       if (type == 'sd')  se.cov.Rchoice(object, sd = TRUE, digits = digits)
       if (type == 'cor') stop("standard error for correlation coefficients not implemented yet")
@@ -80,12 +83,10 @@ coef.Rchoice <- function(object, ...){
   return(result)
 }
 
-#' @rdname Rchoice
-#' @method nObs Rchoice
-#' @export nObs.Rchoice
-nObs.Rchoice <- function(x, ... ) {
-  return(x$logLik$nobs)
-}
+
+#nObs.Rchoice <- function(x, ... ) {
+#  return(x$logLik$nobs)
+#}
 
 #' @rdname Rchoice
 #' @method fitted Rchoice
@@ -106,6 +107,7 @@ residuals.Rchoice <- function(object, ...){
 
 #' @rdname Rchoice
 #' @method df.residual Rchoice
+#' @import stats
 #' @export
 df.residual.Rchoice <- function(object, ...){
   n <- length(residuals(object))
@@ -115,18 +117,19 @@ df.residual.Rchoice <- function(object, ...){
 
 #' @rdname Rchoice
 #' @method update Rchoice
+#' @import stats
 #' @export
-update.Rchoice <- function (object, new, ...){
+update.Rchoice <- function(object, new, ...){
   call <- object$call
   if (is.null(call))
     stop("need an object with call component")
   extras <- match.call(expand.dots = FALSE)$...
   if (!missing(new))
     call$formula <- update(formula(object), new)
-  if(length(extras) > 0) {
+  if (length(extras) > 0) {
     existing <- !is.na(match(names(extras), names(call)))
     for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
-    if(any(!existing)) {
+    if (any(!existing)) {
       call <- c(as.list(call), extras[!existing])
       call <- as.call(call)
     }
@@ -145,7 +148,7 @@ update.Rchoice <- function (object, new, ...){
 #' in the fitted model,
 #' @return a numeric value with the corresponding AIC or BIC value.
 #' @seealso \code{\link[Rchoice]{Rchoice}}
-#' @importFrom stats AIC
+#' @import stats
 #' @method AIC Rchoice
 #' @export
 #' @examples
@@ -158,14 +161,14 @@ update.Rchoice <- function (object, new, ...){
 #' AIC(probit)
 #' BIC(probit)
 AIC.Rchoice <- function(object, ..., k = 2) {
-  return(- 2 * object$logLik$maximum[[1]] + k * length(coef(object)))
+  return(-2 * object$logLik$maximum[[1]] + k * length(coef(object)))
 }
 
 #' @rdname AIC.Rchoice 
-#' @importFrom stats BIC
+#' @import stats
 #' @method BIC Rchoice
 #' @export 
-BIC.Rchoice <- function( object, ...) {
+BIC.Rchoice <- function(object, ...) {
   return(AIC(object, k = log(object$logLik$nobs)) )
 }
 
@@ -179,14 +182,17 @@ logLik.Rchoice <- function(object,...){
 
 #' Bread for sandwiches
 #' 
-#' Computes the bread of the sandwich covariance matrix for a model of class \code{Rchoice}
+#' Computes the ``bread'' of the sandwich covariance matrix for a model of class \code{Rchoice}
 #' 
 #' @param x a fitted model of class \code{Rchoice},
 #' @param ... Other arguments when \code{bread} is applied to another class object.
 #' @return the covariance matrix times observations
 #' @references Zeileis A (2006), Object-oriented Computation of Sandwich 
 #' Estimators. Journal of Statistical Software, 16(9), 1--16.
-#' @export
+#' @details For more information see \code{\link[sandwich]{bread}} from the package \pkg{sandwich}.
+#' @method bread Rchoice
+#' @import stats
+#' @export bread.Rchoice
 #' @examples
 #' ## Probit model
 #' data("Workmroz")
@@ -194,10 +200,9 @@ logLik.Rchoice <- function(object,...){
 #'                   data = Workmroz , family = binomial('probit'))
 #' summary(probit)
 #' 
-#' library(sandwich)
+#' library("sandwich")
 #' bread(probit) 
-
-bread.Rchoice <- function( x, ... ) {
+bread.Rchoice <- function(x, ... ) {
   return( vcov( x ) * x$logLik$nobs)
 }
 
@@ -211,27 +216,21 @@ bread.Rchoice <- function( x, ... ) {
 #' @return the gradient matrix of dimension n times k 
 #' @references Zeileis A (2006), Object-oriented Computation of Sandwich 
 #' Estimators. Journal of Statistical Software, 16(9), 1--16.
-#' @export
-#' @examples
-#' ## Probit model
-#' data("Workmroz")
-#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
-#'                   data = Workmroz , family = binomial('probit'))
-#' summary(probit)
-#' 
-#' library(sandwich)
-#' estfun(probit) 
-estfun.Rchoice <- function( x, ... ) {
+#' @details For more information see \code{\link[sandwich]{estfun}} from package \pkg{sandwich}.
+#' @method estfun Rchoice
+#' @export estfun.Rchoice
+estfun.Rchoice <- function(x, ... ) {
   return(x$logLik$gradientObs )
 }
 
 #' @rdname Rchoice
 #' @method print Rchoice
+#' @import stats
 #' @export
-print.Rchoice <- function(x, digits = max(3,getOption("digits")-3),
-                          width = getOption("width"),...)
+print.Rchoice <- function(x, digits = max(3,getOption("digits") - 3),
+                          width = getOption("width"), ...)
 {
-  cat("\nCall:\n", deparse(x$call),"\n\n", sep="")
+  cat("\nCall:\n", deparse(x$call),"\n\n", sep = "")
   
   cat("\nCoefficients:\n")
   print.default(format(coef(x), digits = digits), print.gap = 2,
@@ -242,8 +241,9 @@ print.Rchoice <- function(x, digits = max(3,getOption("digits")-3),
 
 #' @rdname Rchoice
 #' @method summary Rchoice
+#' @import stats
 #' @export
-summary.Rchoice <- function (object, ...){
+summary.Rchoice <- function(object, ...){
   b <- object$coefficients
   std.err <- sqrt(diag(vcov(object)))
   z <- b / std.err
@@ -258,6 +258,7 @@ summary.Rchoice <- function (object, ...){
 
 #' @rdname Rchoice
 #' @method print summary.Rchoice
+#' @import stats
 #' @export
 print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 3),
                                  width = getOption("width"),
@@ -268,7 +269,7 @@ print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 3),
   cat("\nCall:\n")
   cat(paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
   
-  if(!(x$family == "poisson")){
+  if (!(x$family == "poisson")) {
     cat("\nFrequencies of categories:\n")
     print(prop.table(x$freq), digits = digits)
   }
@@ -284,8 +285,8 @@ print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 3),
   cat(paste("\nNumber of iterations:" , x$logLik$iterations))
   cat(paste("\nExit of MLE:", x$logLik$message))
   
-  if(x$R.model){
-    if(is.null(x$draws)){
+  if (x$R.model) {
+    if (is.null(x$draws)) {
       cat(paste("\nSimulation based on", x$R, "pseudo-random draws"))
     }else {
       cat(paste("\nSimulation based on", x$R, "Halton draws"))
@@ -294,7 +295,7 @@ print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 3),
   invisible(x)
 }
 
-#' Get Model Summaries for Use with "mtable"
+#' Get Model Summaries for use with "mtable" for object of class Rchoice
 #' 
 #' A generic function to collect coefficients and summary statistics from a \code{Rchoice} object. It is used in \code{mtable}
 #' 
@@ -303,22 +304,10 @@ print.summary.Rchoice <- function(x, digits = max(3, getOption("digits") - 3),
 #' @param ... further arguments,
 #' 
 #' @details For more details see package \pkg{memisc}.
-#' @examples
-#' 
-#' ## Probit Model
-#' data("Workmroz")
-#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
-#'                  data = Workmroz, family = binomial('probit'))
-#' ## Logit Model
-#' logit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
-#'                  data = Workmroz, family = binomial('logit'))
-#'                  
-#' ## Table with Models
-#' library(memisc)
-#' mtable("Probit Model"= probit, "Logit Model" = logit, 
-#'        summary.stats = c("N", "Log-likelihood", "BIC", "AIC"))                 
+#' @import stats
+#' @importFrom memisc getSummary
 #' @export 
-getSummary.Rchoice <- function (obj, alpha = 0.05, ...){
+getSummary.Rchoice <- function(obj, alpha = 0.05, ...){
   smry <- summary(obj)
   coef <- smry$CoefTable
   lower <- coef[, 1] - coef[, 2] * qnorm(alpha/2)
@@ -338,7 +327,7 @@ getSummary.Rchoice <- function (obj, alpha = 0.05, ...){
 ## Method for Random Parameters
 ##=================================
 
-#' Plot of the distribution of conditional expectation of random parameters.
+#' Plot the distribution of conditional expectation for random parameters.
 #' 
 #' Plot the distribution of the conditional expectation of the random parameters or compensating variations for objects of class \code{Rchoice}. 
 #' 
@@ -365,7 +354,10 @@ getSummary.Rchoice <- function (obj, alpha = 0.05, ...){
 #' }
 #' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of different discrete choice models with individual parameters.
 #' @method plot Rchoice
+#' @author Mauricio Sarrias
 #' @export
+#' @import graphics
+#' @import stats
 #' @examples
 #' \dontrun{
 #' ## Probit Model with Random Effects and Random Parameters
@@ -394,28 +386,28 @@ plot.Rchoice <- function(x, par = NULL, effect = c("ce", "cv"), wrt = NULL,
                          type = c("density", "histogram"), adjust = 1, 
                          main = NULL, col = "indianred1", breaks = 10, ylab = NULL,
                          xlab = NULL, ind = FALSE, id = NULL, ...){
-  if(!x$R.model) stop("the plot method is only relevant for random parameters")
+  if (!x$R.model) stop("the plot method is only relevant for random parameters")
   if (is.null(par)) stop("Must specified the name of the random parameters")
   type <- match.arg(type)
   effect <- match.arg(effect)
-  if (is.null(xlab)){
+  if (is.null(xlab)) {
     xlab <- switch(effect,
                    "cv" = expression(E(hat(cv[i]))),
                    "ce"  = expression(E(hat(beta[i]))))
   }
-  if (!ind){
+  if (!ind) {
     if (is.null(main)) main <- paste("Conditional Distribution for", par)
-    if (is.null(ylab)){
+    if (is.null(ylab)) {
       ylab <- switch(type,
                      "density"   = "Density",
                      "histogram" = "Frequency")
     }
     rpar <- effect.Rchoice(x, par,  effect = effect, wrt =  wrt)$mean
-    if (type == "density"){
+    if (type == "density") {
       pdens <- density(rpar, adjust = adjust)
       plot(pdens, ylab = ylab, xlab = xlab, main = main, col =  col)
       has.pos <- any(pdens$x > 0)
-      if (has.pos){
+      if (has.pos) {
         x1 <- min(which(pdens$x >= 0))  
         x2 <- max(which(pdens$x <  max(pdens$x)))
         with(pdens, polygon(x = c(x[c(x1, x1:x2, x2)]), y = c(0, y[x1:x2], 0), 
@@ -431,7 +423,7 @@ plot.Rchoice <- function(x, par = NULL, effect = c("ce", "cv"), wrt = NULL,
   }
   else{
     if (is.null(main)) main <- paste("95% Probability Intervals for ", par)
-    if(is.null(id)) id <- seq(1,10,1)
+    if (is.null(id)) id <- seq(1, 10, 1)
     if (is.null(ylab)) ylab <- "Individuals"
     f.bran <- effect.Rchoice(x, par,  effect = effect, wrt =  wrt)$mean
     f.sran <- effect.Rchoice(x, par,  effect = effect, wrt =  wrt)$sd.est
@@ -445,54 +437,15 @@ plot.Rchoice <- function(x, par = NULL, effect = c("ce", "cv"), wrt = NULL,
 }
 
 
-#' Functions for correlated random parameters
-#' 
-#' These are a set of functions that help to extract the variance-covariance matrix, the correlation matrix, and the standard error of the random parameters for models of class \code{Rchoice}.
-#' 
-#' @param x a object of class \code{Rchoice} where \code{ranp} is not \code{NULL}, 
-#' @param sd if \code{TRUE}, then the standard deviations of the random parameters along with their standard errors are computed,
-#' @param digits the number of digits,
-#' @param ... further arguments
-#' @return \code{cov.Rchoice} returns a matrix with the variance of the random parameters if model is fitted with random coefficients. If the model is fitted with \code{correlation = TRUE}, then the variance-covariance matrix is returned. 
-#' 
-#'   
-#' If \code{correlation = TRUE} in the fitted model, then  \code{se.cov.Rchoice} returns a coefficient matrix for the elements of the variance-covariance matrix or the standard deviations if \code{sd = TRUE}.
-#' 
-#' 
-#' @details The variance-covariance matrix is computed using \eqn{LL'=\Sigma}, where \eqn{L} is the Cholesky matrix.
-#' 
-#' 
-#' \code{se.cov.Rchoice} function is a wrapper for \code{\link[msm]{deltamethod}} function of \pkg{msm} package.
-#' @references
-#' \itemize{
-#' \item Greene, W. H. (2012). Econometric Analysis, Seventh Edition. Pearson Hall.
-#' \item Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge university press.
-#' }
-#' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of discrete choice models with individual heterogeneity.
-#' @examples
-#' \dontrun{
-#' ## Estimate a poisson model with correlated random parameters
-#' data("Articles")
-#' poissonc.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
-#'                        data = Articles, 
-#'                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
-#'                        family = poisson, 
-#'                        correlation =  TRUE)
-#'                        
-#' ## Functions for models with correlated random parameters 
-#' cov.Rchoice(poissonc.ran)
-#' cor.Rchoice(poissonc.ran)
-#' se.cov.Rchoice(poissonc.ran)
-#' se.cov.Rchoice(poissonc.ran, sd = TRUE)                     
-#' }
+#' @rdname vcov.Rchoice
 #' @export
 cov.Rchoice <- function(x){
-  if(!inherits(x, "Rchoice")) stop("not a \"Rchoice\" object")
+  if (!inherits(x, "Rchoice")) stop("not a \"Rchoice\" object")
   if (is.null(x$ranp)) stop('\"cov.Rchoice\"  only relevant for random coefficient model')
   beta.hat <- coef(x)
   K <- length(x$ranp)
   nr <- names(x$ranp)
-  if (x$correlation){
+  if (x$correlation) {
     names.stds <- c()
     for (i in 1:K) names.stds <- c(names.stds, paste('sd', nr[i], nr[i:K], sep = '.'))
     v    <- beta.hat[names.stds]
@@ -502,13 +455,13 @@ cov.Rchoice <- function(x){
     names.stds <- paste("sd", nr, sep = ".")
     sv   <- beta.hat[names.stds]
     V    <- matrix(0, K, K)
-    diag(V) <- sv^2
+    diag(V) <- sv ^ 2
     colnames(V) <- rownames(V) <- nr
   }
   V
 }
 
-#' @rdname cov.Rchoice
+#' @rdname vcov.Rchoice
 #' @export
 cor.Rchoice <- function(x){
   if (!x$correlation) stop('\"cor.Rchoice\"  only relevant for correlated random coefficient model')
@@ -538,6 +491,7 @@ cor.Rchoice <- function(x){
 #' \item Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge university press.
 #' }
 #' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of different discrete choice models with individual parameters.
+#' @import stats
 #' @examples
 #' \dontrun{
 #' ## Probit Model with Random Effects and Random Parameters
@@ -569,8 +523,8 @@ effect.Rchoice <- function(x, par = NULL, effect = c("cv", "ce"), wrt = NULL, ..
   K <- dim(bi)[[3]]
   
   mean <- mean.sq <- array(NA, dim = c(N, R, K))
-  for (j in 1:K){
-    if (type == "cv"){
+  for (j in 1:K) {
+    if (type == "cv") {
       # Check if wrt is fixed or random
       if (is.null(wrt)) stop("you need to specify wrt")
       is.ran <- any(names(ranp) %in% wrt)
@@ -587,7 +541,7 @@ effect.Rchoice <- function(x, par = NULL, effect = c("cv", "ce"), wrt = NULL, ..
   sd.est  <- suppressWarnings(sqrt(mean.sq - mean ^ 2))
   colnames(mean) <- colnames(mean.sq) <- colnames(sd.est) <- dimnames(bi)[[3]]
   rownames(mean) <- rownames(mean.sq) <- rownames(sd.est) <- dimnames(bi)[[1]]
-  if (!is.null(par)){
+  if (!is.null(par)) {
     mean   <- mean[, par]
     sd.est <- sd.est[, par]
   }
@@ -596,11 +550,12 @@ effect.Rchoice <- function(x, par = NULL, effect = c("cv", "ce"), wrt = NULL, ..
   return(effe)
 }
 
-#' @rdname cov.Rchoice
+#' @rdname vcov.Rchoice
 #' @importFrom msm deltamethod
+#' @import stats
 #' @export
 se.cov.Rchoice <- function(x, sd =  FALSE, digits = max(3, getOption("digits") - 2)){
-  if(!inherits(x, "Rchoice")) stop("not a \"Rchoice\" object")
+  if (!inherits(x, "Rchoice")) stop("not a \"Rchoice\" object")
   if (!x$correlation) stop('se.cov.Rchoice only relevant for correlated random coefficient')
   beta.hat <- x$coefficients
   Ka <- length(x$ranp)
@@ -610,15 +565,15 @@ se.cov.Rchoice <- function(x, sd =  FALSE, digits = max(3, getOption("digits") -
   stds.hat <- beta.hat[names.stds]
   sel.vcov <- vcov(x)[names.stds, names.stds]
   form <- c()
-  if (sd){
-    for (i in 1:Ka){
+  if (sd) {
+    for (i in 1:Ka) {
       k <- i
       if (i == 1) {
         form <- paste("~ sqrt(", c(form, paste(paste("x",  i, sep = ""), paste("x", k, sep = ""), sep = "*")), ")")
       } else {
         temp <- paste(paste("x",  i, sep = ""), paste("x", k, sep = ""), sep = "*")
         j <- 2
-        while(j <= i){
+        while (j <= i) {
           temp <- paste(temp, make.add(row = j, col = k, Ka = Ka)[1], sep = "+") 
           j <- j + 1
         }
@@ -628,13 +583,13 @@ se.cov.Rchoice <- function(x, sd =  FALSE, digits = max(3, getOption("digits") -
     b <- sqrt(diag(cov.Rchoice(x)))
     names(b) <- colnames(cov.Rchoice(x))
   } else {
-    for (i in 1:Ka){ 
+    for (i in 1:Ka) { 
       if (i == 1) {
         form <- paste("~", c(form, paste(paste("x",  i:Ka, sep = ""), paste("x", i, sep = ""), sep = "*")))
       } else {
         temp <- paste(paste("x",  i:Ka, sep = ""), paste("x", i, sep = ""), sep = "*")
         j <- 2
-        while(j <= i){
+        while (j <= i) {
           temp <- paste(temp, make.add(row = j, col = i, Ka = Ka), sep = "+") 
           j <- j + 1
         }
@@ -647,13 +602,13 @@ se.cov.Rchoice <- function(x, sd =  FALSE, digits = max(3, getOption("digits") -
     names(b) <- names.vcov
   }
   std.err <- c()
-  for (i in 1:length(form)){
+  for (i in 1:length(form)) {
     std.err <- c(std.err, msm::deltamethod(as.formula(form[i]), stds.hat, sel.vcov, ses =  TRUE))
   }  
   z <- b / std.err
   p <- 2 * (1 - pnorm(abs(z)))
   tableChol <- cbind(b, std.err, z, p)
-  if(!sd) cat(paste("\nElements of the variance-covariance matrix \n\n"))
+  if (!sd) cat(paste("\nElements of the variance-covariance matrix \n\n"))
   else cat(paste("\nStandard deviations of the random parameters \n\n"))
   colnames(tableChol) <- c("Estimate", "Std. Error", "z-value", "Pr(>|z|)") 
   printCoefmat(tableChol, digits =  digits)
