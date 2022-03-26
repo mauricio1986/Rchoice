@@ -10,3 +10,4 @@ Rchoice  is a package in R for estimating Ordered, Binary and Poisson models wit
 * Estimate the conditional individual-specific coefficient
 * Binary models with (Logit/Probit) with heteroskedasticity
 * Probit model with endogenous continuous covariate using MLE
+* Compute marginal effects. 
