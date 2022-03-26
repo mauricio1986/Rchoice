@@ -3,7 +3,7 @@ Type: Package
 Title: Discrete Choice (Binary, Poisson and Ordered) Models with Random
     Parameters
 Version: 0.3-4
-Date: 2021-07-07
+Date: 2022-03-15
 Authors@R: person("Mauricio", "Sarrias", role = c("aut", "cre"), email = "msarrias86@gmail.com", comment = c(ORCID = "0000-0001-5932-4817"))
 Description: An implementation of simulated maximum likelihood method for the estimation of Binary (Probit and Logit), Ordered (Probit and Logit) and Poisson models with random parameters for cross-sectional and longitudinal data as presented in Sarrias (2016) <doi:10.18637/jss.v074.i10>.
 Depends:
