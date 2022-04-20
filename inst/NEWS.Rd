@@ -2,6 +2,19 @@
 \title{Rchoice News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.3-5}{
+\subsection{NEW FEATURES}{
+    \itemize{
+      \item New urls in Description. 
+      \item New README.
+      \item New methods for effect.
+      \item Improved documentation.
+      \item AIC and BIC for different classes are dropped. We just need "logLik()".
+      \item Changing the behavior of set.seed as a good practice. 
+    }
+  }  
+}
+
 \section{CHANGES IN VERSION 0.3-4}{
 \subsection{NEW FEATURES}{
     \itemize{

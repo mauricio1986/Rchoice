@@ -75,6 +75,7 @@
 #' @author Mauricio Sarrias \email{msarrias86@@gmail.com}
 #' @seealso \code{\link[Rchoice]{plot.Rchoice}}, \code{\link[Rchoice]{effect.Rchoice}}
 #' @examples
+#' \donttest{
 #' ## Probit model
 #' data("Workmroz")
 #' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
@@ -93,7 +94,6 @@
 #' summary(oprobit)
 #' 
 #' ## Poisson Model with Random Parameters
-#' \dontrun{
 #' poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
 #'                        data = Articles,  family = poisson,
 #'                        ranp = c(kid5 = "n", phd = "n", ment = "n"))
@@ -104,7 +104,8 @@
 #'                        data = Articles, 
 #'                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
 #'                        family = poisson, 
-#'                        correlation =  TRUE)
+#'                        correlation =  TRUE,
+#'                        R = 20)
 #' summary(poissonc.ran)
 #' 
 #' ## Hierarchical Poisson Model
@@ -117,13 +118,14 @@
 #' summary(poissonH.ran)
 #' 
 #' ## Ordered Probit Model with Random Effects and Random Parameters
+#' Health$linc <- log(Health$hhinc)
 #'oprobit.ran <- Rchoice(newhsat ~ age + educ + married + hhkids + linc,
 #'                      data = Health[1:2000, ],
 #'                      family = ordinal('probit'),
 #'                      ranp = c(constant = "n", hhkids = "n", linc = "n"),
 #'                      panel = TRUE,
 #'                      index = "id",
-#'                      R = 100,
+#'                      R = 10,
 #'                      print.init = TRUE)
 #'summary(oprobit.ran)
 #'} 
@@ -133,11 +135,12 @@
 #' Greene, W. H. (2012). Econometric Analysis. 7 edition. Prentice Hall.
 #' 
 #' Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge university press.
+#' @keywords models
 #' @import maxLik Formula stats
 #' @importFrom plm pdata.frame
 Rchoice <- function(formula, data, subset, weights, na.action, family,
                     start = NULL, ranp = NULL, R = 40, haltons = NA, 
-                    seed = 10, correlation = FALSE, panel = FALSE, index = NULL,
+                    seed = NULL, correlation = FALSE, panel = FALSE, index = NULL,
                     mvar = NULL, print.init = FALSE, init.ran = 0.1, 
                     gradient = TRUE, ...){
   ####################

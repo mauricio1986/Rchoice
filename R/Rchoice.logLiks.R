@@ -10,9 +10,10 @@ lnpoisson <- function(theta, y, X,
   index <- tcrossprod(X, t(theta))
   index <- pmin(index, 700)
   mu    <- exp(index)
-  pi    <- dpois(y, mu)
-  pi    <- pmax(pi, .Machine$double.eps)
-  ll    <- sum(weights * log(pi))
+  #pi    <- dpois(y, mu)
+  #pi    <- pmax(pi, .Machine$double.eps)
+  #ll    <- sum(weights * log(pi))
+  ll   <- sum(weights * dpois(y, mu, log = TRUE))
   
   ## gradient
   G      <- as.vector(y - mu) * X 
@@ -67,7 +68,8 @@ lnlpoisson.ran <- function(theta, y, X, S = NULL, ranp, R, correlation, link,
   }               
   
   ## get random draws
-  set.seed(seed)
+  #set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   Omega    <- make.draws(R * ifelse(panel, n, N), Ka, haltons) 
   
   ## fixed part
@@ -175,9 +177,10 @@ lnbinary <- function(theta, y, X, link,
                        (dfun(x) / pmax(pfun(x), .Machine$double.eps))^2
   index  <- tcrossprod(X, t(theta))
   q      <- 2 * y - 1 
-  pi     <- pfun(q * index)
-  pi     <- pmax(pi, .Machine$double.eps)
-  ll     <- sum(weights * log(pi))
+  #pi     <- pfun(q * index)
+  #pi     <- pmax(pi, .Machine$double.eps)
+  #ll     <- sum(weights * log(pi))
+  ll    <- sum(weights * pfun(q * index, log.p = TRUE))
   
   ## Gradient
   G <- as.vector(q * mill(q * index)) * X
@@ -238,7 +241,8 @@ lnlbinary.ran <- function(theta, y, X, S = NULL, ranp, R, correlation, link,
   }                 
   
   ## make random draws
-  set.seed(seed)
+  #set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   Omega    <- make.draws(R * ifelse(panel, n, N), Ka, haltons) 
   
   ## fixed part of index
@@ -429,7 +433,8 @@ lnordered.ran <- function(theta, y, X, S = NULL, ranp, R, correlation, link,
   }  
   
   ## Random Draws
-  set.seed(seed)
+  #set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   Omega <- make.draws(R * ifelse(panel, n, N), Ka, haltons) 
   
   ## Make Fixed Part

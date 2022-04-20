@@ -10,21 +10,62 @@
 #' @param x,object an object of class \code{ivpml}.
 #' @param digits the number of digits.
 #' @param eigentol the standard errors are only calculated if the ratio of the smallest and largest eigenvalue of the Hessian matrix is less than \code{eigentol}.  Otherwise the Hessian is treated as singular. 
-#' @param k a numeric value, use as penalty coefficient for number of parameters in the fitted model.
 #' @param newdata optionally, a data frame in which to look for variables with which to predict.
 #' @param type the type of prediction required. The default, \code{type = xb}, is on the linear prediction. If \code{type = pr}, the predicted probabilities of a positive outcome is returned. Finally, if \code{type = stdp} the standard errors of the linear predictions for each individual is returned.
 #' @param asf  if \code{TRUE}, the average structural function is used. This option is not allowed with \code{xb} or \code{stdp}.
 #' @author Mauricio Sarrias.
+#' @details 
+#' 
+#' The IV probit for cross-sectional data has the following structure:
+#'
+#' \deqn{
+#' y_{1i}^*  = x_i^\top\beta + \gamma y_{2i}+ \epsilon_i,
+#' }
+#' with
+#' \deqn{
+#'  y_{2i}  = z_i^\top\delta +  \upsilon_i,   
+#' }
+#' where \eqn{y_{1i}^*} is the latent (unobserved) dependent variable for individual \eqn{i = 1,...,N}; 
+#' \eqn{y_{2i}} is the endogenous continuous variable; \eqn{z_i} is the vector of exogenous variables 
+#' which also includes the instruments for \eqn{y_{2i}}; 
+#' and \eqn{(\epsilon, \upsilon)} are normal jointly distributed.
+#'
+#' The model is estimated using the \code{maxLik} function from \code{\link[maxLik]{maxLik}} package using 
+#' analytic gradient.
+#' 
+#' @references
+#' Greene, W. H. (2012). Econometric Analysis. 7 edition. Prentice Hall.
+#' @examples
+#' \donttest{ 
+#' # Data
+#' library("AER")
+#' data("PSID1976")
+#' PSID1976$lfp  <- as.numeric(PSID1976$participation == "yes")
+#' PSID1976$kids <- with(PSID1976, factor((youngkids + oldkids) > 0,
+#'                                       levels = c(FALSE, TRUE), 
+#'                                       labels = c("no", "yes")))
+#'                                       
+#' # IV probit model by MLE
+#' # (nwincome is endogenous and heducation is the additional instrument)
+#' PSID1976$nwincome <- with(PSID1976, (fincome - hours * wage)/1000)
+#' fiml.probit <- ivpml(lfp ~  education + experience + I(experience^2) + age + 
+#'                             youngkids + oldkids + nwincome |
+#'                             education + experience + I(experience^2) + age + 
+#'                             youngkids + oldkids + heducation, 
+#'                      data = PSID1976)
+#' summary(fiml.probit)
+#' }
 #' @import Formula maxLik stats
+#' @keywords models
 #' @export
 ivpml <- function(formula, data, messages = TRUE, ...){
   callT  <- match.call(expand.dots = TRUE)
   callF  <- match.call(expand.dots = FALSE)
   nframe <- length(sys.calls())
   
-  # ============================
-  # 1. Model frame 
-  # ============================
+  # ============================-
+  # 1. Model frame ----
+  # ============================-
   mf         <- callT
   m          <- match(c("formula", "data", "subset", "na.action"), names(mf), 0)
   mf         <- mf[c(1, m)]
@@ -34,9 +75,9 @@ ivpml <- function(formula, data, messages = TRUE, ...){
   mf[[1]]    <- as.name("model.frame")
   mf         <- eval(mf, parent.frame())
   
-  ##############################
-  ## 2. Variables
-  ##############################
+  # ============================-
+  # 2. Variables----
+  # ============================-
   y1    <- model.response(mf)
   y.var <- f[[2]]
   X     <- model.matrix(f, data = mf, rhs = 1)
@@ -48,15 +89,21 @@ ivpml <- function(formula, data, messages = TRUE, ...){
   if (messages && (ncol(Z) > ncol(X)))  cat("\nEstimating an overidentified model....\n")
   end.var     <- colnames(y2)
   instruments <- colnames(Z)
-  if (length(end.var) > 1L) stop("ivpml only works with one endogenous variable") 
+  if (length(end.var) > 1L) stop("ivpml only works with one endogenous variable")
   
-  ##############################
-  ## 3. Initial values
-  ##############################
+  # Check dependent variable
+  if (!all(y1 %in% c( 0, 1, TRUE, FALSE))){
+    stop( "all dependent variables must be either 0, 1, TRUE, or FALSE")
+  }
+  if (!is.numeric(y1)) y1 <- as.numeric(y1) 
+  
+  # ============================-
+  # 3. Initial values----
+  # ============================-
   # These are different as those in STATA for the first equation
   if (messages) cat("\nObtaining starting values from probit and linear model...\n")
-  probit       <- glm(y1 ~ X - 1,  family = binomial("probit"))
-  linear       <- lm(y2 ~ Z - 1, data = mf)
+  probit       <- glm.fit(X, y1,  family = binomial("probit"))
+  linear       <- lm.fit(Z, y2)
   sigma2       <- sum(resid(linear) ^ 2) / linear$df.residual
   lnsigma      <- log(sqrt(sigma2))
   rho          <- cor(resid(linear), resid(probit))
@@ -66,9 +113,9 @@ ivpml <- function(formula, data, messages = TRUE, ...){
   nam_lin      <- paste(end.var, colnames(Z), sep = ":")
   names(start) <- c(nam_prob, nam_lin,  "lnsigma", "atanhrho")
   
-  ##############################
-  ## 4. Optimization
-  ##############################
+  # ============================-
+  # 4. Optimization----
+  # ============================-
   if (is.null(callT$method))  callT$method   <- 'nr'
   opt <- callT
   m   <- match(c("print.level", "ftol", "tol", "reltol",
@@ -82,24 +129,25 @@ ivpml <- function(formula, data, messages = TRUE, ...){
   opt[c('y1', 'y2', 'X', 'Z')] <- list(as.name('y1'), as.name('y2'), as.name('X'), as.name('Z'))
   out <- eval(opt, sys.frame(which = nframe))
   
-  ##############################
-  ## 5. Save results
-  ##############################
+  # ============================-
+  # 5. Save results----
+  # ============================-
   out$end.var     <- end.var
   out$y.var       <- y.var
   out$instruments <- instruments
   out$formula     <- f
   out$mf          <- mf
   out$call        <- callT
-  class(out)      <- c("ivpml", "maxLik", class(out))
+  #class(out)      <- c("ivpml", "maxLik", class(out))
+  class(out)      <- c("ivpml", class(out)) # JSS reviewer
   return(out)
 }
 
 
 
-############################
-# S3 method for ivpml class
-#############################
+############################---
+# S3 method for ivpml class ----
+#############################---
 
 #' @rdname ivpml
 #' @method terms ivpml
@@ -140,21 +188,21 @@ bread.ivpml <- function(x, ...){
   bread(x, ...)
 }
 
-#' @rdname ivpml
-#' @import stats
-#' @method AIC ivpml
-#' @export
-AIC.ivpml <- function(object, k = 2, ...){
-  -2*logLik(object) + k * length(coef(object))
-}
-
-#' @rdname ivpml
-#' @import stats
-#' @method BIC ivpml
-#' @export
-BIC.ivpml <- function(object, ...){
-  AIC(object, k = log(nrow(object$gradientObs)), ...)
-}
+# #' @rdname ivpml
+# #' @import stats
+# #' @method AIC ivpml
+# #' @export
+# AIC.ivpml <- function(object, k = 2, ...){
+#   -2*logLik(object) + k * length(coef(object))
+# }
+# 
+# #' @rdname ivpml
+# #' @import stats
+# #' @method BIC ivpml
+# #' @export
+# BIC.ivpml <- function(object, ...){
+#   AIC(object, k = log(nrow(object$gradientObs)), ...)
+# }
 
 
 #' @rdname ivpml
@@ -269,9 +317,9 @@ print.summary.ivpml <- function(x, digits = max(3, getOption("digits") - 2),
   cat("--------------------------------------------\n")
 }
 
-############################
-# Effects and other functions
-#############################
+############################-
+# Effects and other functions ----
+#############################-
 
 #' @rdname ivpml
 #' @method predict ivpml
@@ -322,74 +370,6 @@ predict.ivpml <- function(object, newdata = NULL,
   return(out)
 }
 
-#' Get average marginal effects for IV Probit model.
-#' 
-#' Obtain the average marginal effects from \code{ivpml} class model.
-#' @param object an object of class \code{ivpml} and \code{effect.ivpml} for \code{summary} and \code{print} method. 
-#' @param vcov an estimate of the asymptotic variance-covariance matrix of the parameters for a \code{ivpml} object.
-#' @param asf  if \code{TRUE}, the average structural function is used. 
-#' @param digits the number of digits.
-#' @param ... further arguments.Ignored.
-#' @param x an object of class \code{effect.ivpml}.
-#' @return An object of class \code{effect.ivpml}. 
-#' @details 
-#' This function allows to obtain the average marginal effects (not the marginal effects at the mean). The standard errors are computed using Delta Method. 
-#' @import stats
-#' @importFrom numDeriv jacobian
-#' @export 
-effect.ivpml <- function(object,
-                         vcov = NULL, 
-                         asf = TRUE,
-                         digits = max(3, getOption("digits") - 2), 
-                         ...){
-  if (!inherits(object, "ivpml")) stop("not a \"ivpml\" object")
-  # Variance covariance matrix
-  if (is.null(vcov)){
-    V <- vcov(object)
-  } else {
-    V <- vcov
-    n.param <- length(coef(object))
-    if (dim(V)[1L] != n.param | dim(V)[2L] != n.param)  stop("dim of vcov are not the same as the estimated parameters")
-  } 
-  
-  # Make effects
-  me <- mdydx.ivpml(coeff = coef(object), object, asf) 
-  
-  # Make Jacobian (use numerical jacobian from numDeriv package)
-  jac <- numDeriv::jacobian(mdydx.ivpml, coef(object), object = object, asf = asf)
-  
-  # Print results
-  se <- sqrt(diag(jac %*% V %*% t(jac))) 
-  z  <-  me / se 
-  p  <- 2 * pnorm(-abs(z))
-  results            <- cbind(`dydx` = me, `Std. error` = se, `z value` = z, `Pr(> z)` = p)
-  object$margins     <- results
-  class(object)      <- c("effect.ivpml")
-  return(object)
-}
-
-#' @rdname effect.ivpml
-#' @method summary effect.ivpml
-#' @import stats
-#' @export
-summary.effect.ivpml <- function(object, ...){
-  CoefTable      <- object$margins
-  summary        <- list(CoefTable = CoefTable)
-  class(summary) <- "summary.effect.ivpml"
-  summary
-}
-
-#' @rdname effect.ivpml
-#' @method print summary.effect.ivpml
-#' @import stats
-#' @export
-print.summary.effect.ivpml <- function(x, digits = max(3, getOption("digits") - 3), ...){
-  cat("------------------------------------------------------", fill = TRUE)
-  cat("Marginal effects for the IV Probit model:\n")
-  cat("------------------------------------------------------",fill = TRUE)
-  printCoefmat(x$CoefTable, digits = digits)
-  cat("\nNote: Marginal effects computed as the average for each individual", fill = TRUE)
-}
 
 #' Get Model Summaries for use with "mtable" for objects of class ivpml
 #' 

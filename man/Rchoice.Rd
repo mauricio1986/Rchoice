@@ -27,7 +27,7 @@ Rchoice(
   ranp = NULL,
   R = 40,
   haltons = NA,
-  seed = 10,
+  seed = NULL,
   correlation = FALSE,
   panel = FALSE,
   index = NULL,
@@ -167,6 +167,7 @@ The models are estimated using the \code{maxLik} function from \code{\link[maxLi
  random parameters: \deqn{\beta_{ir}=\beta+\pi's_i+L\omega_{ir}} \pkg{Rchoice} manages the variables in the hierarchical model by the \code{formula} object: all the hierarchical variables (\eqn{s_i}) are included after the \code{|} symbol. The argument \code{mvar} indicate which variables enter in each random parameter. See examples below
 }
 \examples{
+\donttest{
 ## Probit model
 data("Workmroz")
 probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
@@ -185,7 +186,6 @@ data = Health, family = ordinal('probit'), subset = year == 1988)
 summary(oprobit)
 
 ## Poisson Model with Random Parameters
-\dontrun{
 poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
                        data = Articles,  family = poisson,
                        ranp = c(kid5 = "n", phd = "n", ment = "n"))
@@ -196,7 +196,8 @@ poissonc.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment,
                        data = Articles, 
                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
                        family = poisson, 
-                       correlation =  TRUE)
+                       correlation =  TRUE,
+                       R = 20)
 summary(poissonc.ran)
 
 ## Hierarchical Poisson Model
@@ -209,13 +210,14 @@ poissonH.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment | fem + phd,
 summary(poissonH.ran)
 
 ## Ordered Probit Model with Random Effects and Random Parameters
+Health$linc <- log(Health$hhinc)
 oprobit.ran <- Rchoice(newhsat ~ age + educ + married + hhkids + linc,
                      data = Health[1:2000, ],
                      family = ordinal('probit'),
                      ranp = c(constant = "n", hhkids = "n", linc = "n"),
                      panel = TRUE,
                      index = "id",
-                     R = 100,
+                     R = 10,
                      print.init = TRUE)
 summary(oprobit.ran)
 } 
@@ -233,3 +235,4 @@ Train, K. (2009). Discrete Choice Methods with Simulation. Cambridge university 
 \author{
 Mauricio Sarrias \email{msarrias86@gmail.com}
 }
+\keyword{models}

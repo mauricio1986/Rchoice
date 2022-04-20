@@ -137,40 +137,7 @@ update.Rchoice <- function(object, new, ...){
   eval(call, parent.frame())
 }
 
-#' Akaike's Information Criterion
-#' 
-#' Calculate Akaike's information Criterion (AIC) or the Bayesian
-#' information Criterion (BIC) for a model of class \code{Rchoice}.
-#' 
-#' @param object a fitted model of class \code{Rchoice},
-#' @param ... additional arguments to be passed to or from other functions,
-#' @param k a numeric value, use as penalty coefficient for number of parameters
-#' in the fitted model,
-#' @return a numeric value with the corresponding AIC or BIC value.
-#' @seealso \code{\link[Rchoice]{Rchoice}}
-#' @import stats
-#' @method AIC Rchoice
-#' @export
-#' @examples
-#' ## Probit model
-#' data("Workmroz")
-#' probit <- Rchoice(lfp ~ k5 + k618 + age + wc + hc + lwg + inc,  
-#'                  data = Workmroz , family = binomial('probit'))
-#' summary(probit)
-#' 
-#' AIC(probit)
-#' BIC(probit)
-AIC.Rchoice <- function(object, ..., k = 2) {
-  return(-2 * object$logLik$maximum[[1]] + k * length(coef(object)))
-}
 
-#' @rdname AIC.Rchoice 
-#' @import stats
-#' @method BIC Rchoice
-#' @export 
-BIC.Rchoice <- function(object, ...) {
-  return(AIC(object, k = log(object$logLik$nobs)) )
-}
 
 #' @rdname Rchoice
 #' @method logLik Rchoice
@@ -359,27 +326,22 @@ getSummary.Rchoice <- function(obj, alpha = 0.05, ...){
 #' @import graphics
 #' @import stats
 #' @examples
-#' \dontrun{
-#' ## Probit Model with Random Effects and Random Parameters
-#' data('Unions', package = 'pglm')
-#' Unions$lwage <- log(Unions$wage)
-#' union.ran <- Rchoice(union ~ age + exper + rural + lwage,
-#'                      data = Unions[1:2000, ],
-#'                      family = binomial('probit'),
-#'                      ranp = c(constant = "n", lwage = "t"),
-#'                      R = 10,
-#'                      panel = TRUE,
-#'                      index = "id",
-#'                      print.init = TRUE)
+#' \donttest{
+#' # Poisson with random parameters
+#' data("Articles")
+#' poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
+#'                        data = Articles,  family = poisson,
+#'                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+#'                        R = 10)
 #' 
-#' ## Plot the distribution of the conditional mean for lwage
-#' plot(union.ran, par = "lwage", type = "density")
+#' ## Plot the distribution of the conditional mean for ment
+#' plot(poisson.ran, par = "ment", type = "density")
 #' 
 #' ## Plot the conditional mean for the first 20 individuals
-#' plot(union.ran, par = "lwage", ind =  TRUE, id = 1:20, col = "blue")
+#' plot(poisson.ran, par = "ment", ind =  TRUE, id = 1:20, col = "blue")
 #' 
-#' ## Plot the compensating variation
-#' plot(union.ran, par = "lwage", effect = "cv", wrt = "rural", type = "histogram")
+#' ## Plot the compensating variation with respect to fem
+#' plot(poisson.ran, par = "ment", effect = "cv", wrt = "fem", type = "histogram")
 #' }
 #' @importFrom plotrix plotCI
 plot.Rchoice <- function(x, par = NULL, effect = c("ce", "cv"), wrt = NULL,
@@ -477,10 +439,10 @@ cor.Rchoice <- function(x){
 #' Get the conditional individual coefficients
 #' 
 #' This a helper function to obtain the individuals' conditional estimate of the random parameters or compensating variations.
-#' @param x a object of class \code{Rchoice},
+#' @param object an object of class \code{Rchoice},
 #' @param par a string giving the name of the variable with random parameter,
 #' @param effect a string indicating what should be computed: the conditional expectation of the individual coefficients "\code{ce}", or the conditional expectation of the individual compensating variations "\code{cv}",
-#' @param wrt a string indicating repect to which variable the compensating variation should be computed,
+#' @param wrt a string indicating respect to which variable the compensating variation should be computed,
 #' @param ... further arguments. Ignored.
 #' 
 #' @return A named list where ``mean'' contains the individuals' conditional mean for the random parameter or compensating variation, and where `sd.est' contains their standard errors. 
@@ -493,31 +455,26 @@ cor.Rchoice <- function(x){
 #' @seealso \code{\link[Rchoice]{Rchoice}} for the estimation of different discrete choice models with individual parameters.
 #' @import stats
 #' @examples
-#' \dontrun{
-#' ## Probit Model with Random Effects and Random Parameters
-#' data('Unions', package = 'pglm')
-#' Unions$lwage <- log(Unions$wage)
-#' union.ran <- Rchoice(union ~ age + exper + rural + lwage,
-#'                      data = Unions[1:2000, ],
-#'                      family = binomial('probit'),
-#'                      ranp = c(constant = "n", lwage = "t"),
-#'                      R = 10,
-#'                      panel = TRUE,
-#'                      index = "id",
-#'                      print.init = TRUE)
+#' \donttest{
+#' # Poisson with random parameters
+#' data("Articles")
+#' poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
+#'                        data = Articles,  family = poisson,
+#'                        ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+#'                        R = 10)
 #' 
-#' ## Get the individuals' conditional mean and their standard errors for lwage                      
-#' bi.wage <- effect.Rchoice(union.ran, par = "lwage", effect = "ce")
-#' summary(bi.wage$mean)
-#' summary(bi.wage$sd.est)
+#' ## Get the individuals' conditional mean and their standard errors for ment                      
+#' bi.ment <- effect(poisson.ran, par = "ment", effect = "ce")
+#' summary(bi.ment$mean)
+#' summary(bi.ment$sd.est)
 #' }
-effect.Rchoice <- function(x, par = NULL, effect = c("cv", "ce"), wrt = NULL, ... ){
-  if (!inherits(x, "Rchoice")) stop("not a \"Rchoice\" object")
+effect.Rchoice <- function(object, par = NULL, effect = c("cv", "ce"), wrt = NULL, ... ){
+  if (!inherits(object, "Rchoice")) stop("not a \"Rchoice\" object")
   type <- match.arg(effect)
-  ranp <- x$ranp
+  ranp <- object$ranp
   if (!is.null(par) && !(par %in% names(ranp))) stop("This parameter is not random: ", par)
-  bi   <- x$bi
-  Qir  <- x$Qir
+  bi   <- object$bi
+  Qir  <- object$Qir
   R    <- ncol(Qir)
   N    <- nrow(Qir)
   K <- dim(bi)[[3]]
@@ -528,7 +485,7 @@ effect.Rchoice <- function(x, par = NULL, effect = c("cv", "ce"), wrt = NULL, ..
       # Check if wrt is fixed or random
       if (is.null(wrt)) stop("you need to specify wrt")
       is.ran <- any(names(ranp) %in% wrt)
-      gamma <- if (is.ran) bi[, , wrt] else coef(x)[wrt]
+      gamma <- if (is.ran) bi[, , wrt] else coef(object)[wrt]
       mean[, , j]    <- (bi[, , j] / gamma)   * Qir 
       mean.sq[, , j] <- ((bi[, , j] / gamma) ^ 2 ) * Qir 
     } else {

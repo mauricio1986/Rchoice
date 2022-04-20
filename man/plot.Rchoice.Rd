@@ -56,27 +56,22 @@ As default, the conditional expectation of \code{par} for the first 10 individua
 Plot the distribution of the conditional expectation of the random parameters or compensating variations for objects of class \code{Rchoice}.
 }
 \examples{
-\dontrun{
-## Probit Model with Random Effects and Random Parameters
-data('Unions', package = 'pglm')
-Unions$lwage <- log(Unions$wage)
-union.ran <- Rchoice(union ~ age + exper + rural + lwage,
-                     data = Unions[1:2000, ],
-                     family = binomial('probit'),
-                     ranp = c(constant = "n", lwage = "t"),
-                     R = 10,
-                     panel = TRUE,
-                     index = "id",
-                     print.init = TRUE)
+\donttest{
+# Poisson with random parameters
+data("Articles")
+poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
+                       data = Articles,  family = poisson,
+                       ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+                       R = 10)
 
-## Plot the distribution of the conditional mean for lwage
-plot(union.ran, par = "lwage", type = "density")
+## Plot the distribution of the conditional mean for ment
+plot(poisson.ran, par = "ment", type = "density")
 
 ## Plot the conditional mean for the first 20 individuals
-plot(union.ran, par = "lwage", ind =  TRUE, id = 1:20, col = "blue")
+plot(poisson.ran, par = "ment", ind =  TRUE, id = 1:20, col = "blue")
 
-## Plot the compensating variation
-plot(union.ran, par = "lwage", effect = "cv", wrt = "rural", type = "histogram")
+## Plot the compensating variation with respect to fem
+plot(poisson.ran, par = "ment", effect = "cv", wrt = "fem", type = "histogram")
 }
 }
 \references{

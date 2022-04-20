@@ -6,8 +6,6 @@
 \alias{model.matrix.hetprob}
 \alias{estfun.hetprob}
 \alias{bread.hetprob}
-\alias{AIC.hetprob}
-\alias{BIC.hetprob}
 \alias{vcov.hetprob}
 \alias{df.residual.hetprob}
 \alias{coef.hetprob}
@@ -16,7 +14,7 @@
 \alias{summary.hetprob}
 \alias{print.summary.hetprob}
 \alias{predict.hetprob}
-\title{Estimate heterokedastic binary (Probit or Logit) model.}
+\title{Estimate heteroskedastic binary (Probit or Logit) model.}
 \usage{
 hetprob(formula, data, link = c("probit", "logit"), Hes = TRUE, ...)
 
@@ -27,10 +25,6 @@ hetprob(formula, data, link = c("probit", "logit"), Hes = TRUE, ...)
 \method{estfun}{hetprob}(x, ...)
 
 \method{bread}{hetprob}(x, ...)
-
-\method{AIC}{hetprob}(object, k = 2, ...)
-
-\method{BIC}{hetprob}(object, ...)
 
 \method{vcov}{hetprob}(object, eigentol = 1e-12, ...)
 
@@ -53,15 +47,13 @@ hetprob(formula, data, link = c("probit", "logit"), Hes = TRUE, ...)
 
 \item{data}{the data of class \code{data.frame}.}
 
-\item{link}{the assumption of the distribution of the error term.}
+\item{link}{the assumption of the distribution of the error term. It could be either \code{link = "probit"} or \code{link = "logit"}.}
 
 \item{Hes}{logical. Should the analytic Hessian to be used? \code{TRUE} as default.}
 
 \item{...}{arguments passed to \code{maxLik}.}
 
 \item{x, object}{an object of class \code{hetprob}.}
-
-\item{k}{a numeric value, use as penalty coefficient for number of parameters in the fitted model}
 
 \item{eigentol}{the standard errors are only calculated if the ratio of the smallest and largest eigenvalue of the Hessian matrix is less than \code{eigentol}.  Otherwise the Hessian is treated as singular.}
 
@@ -105,8 +97,8 @@ analytic gradient and hessian  (if \code{Hess = TRUE}). In particular, the log-l
 \deqn{\log L(\theta) = \sum_i^n\log \left\lbrace \left[1- F\left(\frac{x_i^\top\beta}{\exp(z_i^\top\delta)}\right)\right]^{1-y_i}\left[F\left(\frac{x_i^\top\beta}{\exp(z_i^\top\delta)}\right)\right]^{y_i}\right\rbrace.}
 }
 \examples{
-\dontrun{
-# Estimate a heterokedastic probit and logit model
+\donttest{
+# Estimate a heteroskedastic probit and logit model
 data("Health")
 
 het.probit <- hetprob(working ~ factor(female) + factor(year) + educ + age + I(age^2) | 
@@ -122,6 +114,10 @@ het.logit <- hetprob(working ~ factor(female) + factor(year) + educ + age + I(ag
 summary(het.logit)
 }
 }
+\references{
+Greene, W. H. (2012). Econometric Analysis. 7 edition. Prentice Hall.
+}
 \author{
 Mauricio Sarrias.
 }
+\keyword{models}

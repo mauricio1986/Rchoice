@@ -1,4 +1,4 @@
-#' Estimate heterokedastic binary (Probit or Logit) model.
+#' Estimate heteroskedastic binary (Probit or Logit) model.
 #' 
 #' Estimation of binary dependent variables, either probit or logit, with heteroskedastic error terms for cross-sectional dataset. 
 #'
@@ -6,11 +6,10 @@
 #' @param x,object an object of class \code{hetprob}.
 #' @param formula a symbolic description of the model of the form \code{y ~ x | z} where \code{y} is the binary dependent variable and \code{x} and \code{z} are regressors variables for the mean of the model and lnsigma.
 #' @param data the data of class \code{data.frame}.
-#' @param link the assumption of the distribution of the error term. 
+#' @param link the assumption of the distribution of the error term. It could be either \code{link = "probit"} or \code{link = "logit"}.
 #' @param Hes logical. Should the analytic Hessian to be used? \code{TRUE} as default.
 #' @param digits the number of digits.
 #' @param eigentol the standard errors are only calculated if the ratio of the smallest and largest eigenvalue of the Hessian matrix is less than \code{eigentol}.  Otherwise the Hessian is treated as singular. 
-#' @param k a numeric value, use as penalty coefficient for number of parameters in the fitted model
 #' @param newdata optionally, a data frame in which to look for variables with which to predict.
 #' @param type the type of prediction required. The default, \code{type = xb}, is on the linear prediction without the variance. If \code{type = pr}, the predicted probabilities of a positive outcome is returned. Finally, if \code{type = sigma} the predictions of \eqn{\sigma} for each individual is returned.
 #' @param ... arguments passed to \code{maxLik}. 
@@ -45,10 +44,12 @@
 #' \item{mf}{the model framed used,}
 #' \item{call}{the matched call.} 
 #' @author Mauricio Sarrias. 
+#' @references
+#' Greene, W. H. (2012). Econometric Analysis. 7 edition. Prentice Hall.
 #' @import Formula maxLik stats
 #' @examples
-#' \dontrun{
-#' # Estimate a heterokedastic probit and logit model
+#' \donttest{
+#' # Estimate a heteroskedastic probit and logit model
 #' data("Health")
 #' 
 #' het.probit <- hetprob(working ~ factor(female) + factor(year) + educ + age + I(age^2) | 
@@ -63,19 +64,20 @@
 #'                     link = "logit")
 #' summary(het.logit)
 #' }
+#' @keywords models
 #' @export
 hetprob <- function(formula, 
                     data, 
                     link = c("probit", "logit"), 
-                    Hes =  TRUE, ...){
+                    Hes  = TRUE, ...){
   callT  <- match.call(expand.dots = TRUE)
   callF  <- match.call(expand.dots = FALSE)
   nframe <- length(sys.calls())
   link   <- match.arg(link)
   
-  ##############################
-  ## 1. Model frame 
-  ##############################
+  #=============================-
+  # 1. Model frame ----
+  #=============================-
   mf         <- callT
   m          <- match(c("formula", "data", "subset", "na.action"), names(mf), 0)
   mf         <- mf[c(1L, m)]
@@ -86,22 +88,29 @@ hetprob <- function(formula,
   mf[[1]]    <- as.name("model.frame")
   mf         <- eval(mf, parent.frame())
   
-  ##############################
-  ## 2. Variables
-  ##############################
+  #=============================-
+  # 2. Variables ----
+  #=============================-
   y <- model.response(mf)
   X <- model.matrix(f1, data = mf, rhs = 1)
   Z <- model.matrix(f1, data = mf, rhs = 2)
   
-  ### Drop intercept on Z if included
+  # Drop intercept on Z if included
   zint <- match("(Intercept)", dimnames(Z)[[2]], nomatch = 0)
   if (zint > 0) Z <- Z[, - zint, drop = FALSE]
   
-  ##############################
-  ## 3. Initial values
-  ##############################
-  aux1    <- glm(y ~ X - 1, data = mf, family = binomial(link))
-  logLik0 <- logLik(aux1)
+  # Check dependent variable
+  if (!all(y %in% c( 0, 1, TRUE, FALSE))){
+    stop( "all dependent variables must be either 0, 1, TRUE, or FALSE")
+  }
+  if (!is.numeric(y)) y <- as.numeric(y) 
+  
+  #=============================-
+  # 3. Initial values ----
+  #=============================-
+  #aux1    <- glm(y ~ X - 1, data = mf, family = binomial(link))
+  aux1    <- glm.fit(X, y,  family = binomial(link))
+  logLik0 <- aux1$rank - aux1$aic/2
   betas   <- coef(aux1)
   #aux2   <- lm(residuals(aux1) ~ Z - 1) 
   #gammas <- exp(coef(aux2))
@@ -109,9 +118,9 @@ hetprob <- function(formula,
   theta   <- c(betas, gammas)
   names(theta) <- c(colnames(X), paste0("het.", colnames(Z)))
 
-  ##############################
-  ## 4. Optimization
-  ##############################
+  #=============================-
+  # 4. Optimization ----
+  #=============================-
   if (is.null(callT$method))  callT$method   <- 'nr'
   opt <- callT
   m   <- match(c("print.level", "ftol", "tol", "reltol",
@@ -127,14 +136,14 @@ hetprob <- function(formula,
   opt[c('y', 'X', 'Z')] <- list(as.name('y'), as.name('X'), as.name('Z'))
   out <- eval(opt, sys.frame(which = nframe))
   
-  ##############################
-  ## 5. Return results
-  ##############################
+  #=============================-
+  # 5. Return results ----
+  #=============================-
   out$logLik0     <- logLik0 
   out$formula     <- f1
   out$mf          <- mf
   out$call        <- callT
-  class(out)      <- c("hetprob", "maxLik", class(out))
+  class(out)      <- c("hetprob", class(out))
   return(out)
 }
 
@@ -184,9 +193,9 @@ lnbinary_het <- function(theta, y, X, Z,
 }
 
 
-############################
-# S3 method for hetprob class
-#############################
+# =================================-
+# S3 method for hetprob class ----
+# =================================-
 
 #' @rdname hetprob
 #' @method terms hetprob
@@ -227,21 +236,21 @@ bread.hetprob <- function(x, ...){
   bread(x, ...)
 }
 
-#' @rdname hetprob
-#' @import stats
-#' @method AIC hetprob
-#' @export
-AIC.hetprob <- function(object, k = 2, ...){
-  -2*logLik(object) + k * length(coef(object))
-}
+# #' @rdname hetprob
+# #' @import stats
+# #' @method AIC hetprob
+# #' @export
+# AIC.hetprob <- function(object, k = 2, ...){
+#  -2*logLik(object) + k * length(coef(object))
+#}
 
-#' @rdname hetprob
-#' @import stats
-#' @method BIC hetprob
-#' @export
-BIC.hetprob <- function(object, ...){
-  AIC(object, k = log(nrow(object$gradientObs)), ...)
-}
+# #' @rdname hetprob
+# #' @import stats
+# #' @method BIC hetprob
+# #' @export
+# BIC.hetprob <- function(object, ...){
+#  AIC(object, k = log(nrow(object$gradientObs)), ...)
+#}
 
 
 #nObs.hetprob <- function(x, ...){
@@ -366,9 +375,9 @@ print.summary.hetprob <- function(x,
   cat("-------------------------------------------------------------------\n")
 }
 
-############################
-# Effects and other functions
-#############################
+# ============================-
+# Effects and other functions ----
+# ============================-
 
 #' @rdname hetprob
 #' @method predict hetprob
@@ -402,85 +411,6 @@ predict.hetprob <- function(object, newdata = NULL,
   if (type == "xb")    out <- as.vector(xb)
   if (type == "sigma") out <- as.vector(sigma)
   return(out)
-}
-
-#' Get average marginal effects for heterokedastic binary models
-#' 
-#' Obtain the average marginal effects from \code{hetprob} class model.
-#' @param object an object of class \code{hetprob} and \code{effect.hetprob} for \code{summary} and \code{print} method. 
-#' @param vcov an estimate of the asymptotic variance-covariance matrix of the parameters for a \code{hetprob} object.
-#' @param digits the number of digits.
-#' @param ... further arguments.Ignored.
-#' @param x an object of class \code{effect.hetprob}.
-#' @return An object of class \code{effect.heprob}. 
-#' @details 
-#' This function allows to obtain the average marginal effects (not the marginal effects at the mean). The standard errors are computed using Delta Method. 
-#' @examples
-#' \dontrun{ 
-#' # Average marginal effects
-#' data("Health")
-#' het.probit <- hetprob(working ~ factor(female) + factor(year) + educ + age + I(age^2) | 
-#'                                 factor(female) + age + I(age^2), 
-#'                      data = Health, 
-#'                      link = "probit")
-#' summary(het.probit)
-#' eff <- effect.hetprob(het.probit)
-#' summary(eff)
-#' }
-#' @import stats
-#' @importFrom numDeriv jacobian
-#' @export 
-effect.hetprob <- function(object,
-                           vcov = NULL, 
-                           digits = max(3, getOption("digits") - 2),
-                           ...){
-  if (!inherits(object, "hetprob")) stop("not a \"hetprob\" object")
-  # Variance covariance matrix
-  if (is.null(vcov)){
-    V <- vcov(object)
-  } else {
-    V <- vcov
-    n.param <- length(coef(object))
-    if (dim(V)[1L] != n.param | dim(V)[2L] != n.param)  stop("dim of vcov are not the same as the estimated parameters")
-  } 
-  
-  # Make effects
-  me <- mdydx.hetprob(coeff = coef(object), object) 
-  
-  # Make Jacobian (use numerical jacobian)
-  jac <- numDeriv::jacobian(mdydx.hetprob, coef(object), object = object)
-  
-  # Save results
-  se <- sqrt(diag(jac %*% V %*% t(jac))) 
-  z  <-  me / se 
-  p  <- 2 * pnorm(-abs(z))
-  results            <- cbind(`dydx` = me, `Std. error` = se, `z value` = z, `Pr(> z)` = p)
-  object$margins     <- results
-  class(object)      <- c("effect.hetprob")
-  return(object)
-}
-
-#' @rdname effect.hetprob
-#' @method summary effect.hetprob
-#' @import stats
-#' @export
-summary.effect.hetprob <- function(object, ...){
-  CoefTable      <- object$margins
-  summary        <- list(CoefTable = CoefTable)
-  class(summary) <- "summary.effect.hetprob"
-  summary
-}
-
-#' @rdname effect.hetprob
-#' @method print summary.effect.hetprob
-#' @import stats
-#' @export
-print.summary.effect.hetprob <- function(x, digits = max(3, getOption("digits") - 3), ...){
-  cat("------------------------------------------------------", fill = TRUE)
-  cat("Marginal effects for the heteroskedastic binary model:\n")
-  cat("------------------------------------------------------",fill = TRUE)
-  printCoefmat(x$CoefTable, digits = digits)
-  cat("\nNote: Marginal effects computed as the average for each individual", fill = TRUE)
 }
 
 mdydx.hetprob <- function(coeff, object){

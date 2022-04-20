@@ -4,16 +4,16 @@
 \alias{effect.Rchoice}
 \title{Get the conditional individual coefficients}
 \usage{
-effect.Rchoice(x, par = NULL, effect = c("cv", "ce"), wrt = NULL, ...)
+\method{effect}{Rchoice}(object, par = NULL, effect = c("cv", "ce"), wrt = NULL, ...)
 }
 \arguments{
-\item{x}{a object of class \code{Rchoice},}
+\item{object}{an object of class \code{Rchoice},}
 
 \item{par}{a string giving the name of the variable with random parameter,}
 
 \item{effect}{a string indicating what should be computed: the conditional expectation of the individual coefficients "\code{ce}", or the conditional expectation of the individual compensating variations "\code{cv}",}
 
-\item{wrt}{a string indicating repect to which variable the compensating variation should be computed,}
+\item{wrt}{a string indicating respect to which variable the compensating variation should be computed,}
 
 \item{...}{further arguments. Ignored.}
 }
@@ -24,23 +24,18 @@ A named list where ``mean'' contains the individuals' conditional mean for the r
 This a helper function to obtain the individuals' conditional estimate of the random parameters or compensating variations.
 }
 \examples{
-\dontrun{
-## Probit Model with Random Effects and Random Parameters
-data('Unions', package = 'pglm')
-Unions$lwage <- log(Unions$wage)
-union.ran <- Rchoice(union ~ age + exper + rural + lwage,
-                     data = Unions[1:2000, ],
-                     family = binomial('probit'),
-                     ranp = c(constant = "n", lwage = "t"),
-                     R = 10,
-                     panel = TRUE,
-                     index = "id",
-                     print.init = TRUE)
+\donttest{
+# Poisson with random parameters
+data("Articles")
+poisson.ran <- Rchoice(art ~ fem + mar + kid5 + phd + ment, 
+                       data = Articles,  family = poisson,
+                       ranp = c(kid5 = "n", phd = "n", ment = "n"), 
+                       R = 10)
 
-## Get the individuals' conditional mean and their standard errors for lwage                      
-bi.wage <- effect.Rchoice(union.ran, par = "lwage", effect = "ce")
-summary(bi.wage$mean)
-summary(bi.wage$sd.est)
+## Get the individuals' conditional mean and their standard errors for ment                      
+bi.ment <- effect(poisson.ran, par = "ment", effect = "ce")
+summary(bi.ment$mean)
+summary(bi.ment$sd.est)
 }
 }
 \references{

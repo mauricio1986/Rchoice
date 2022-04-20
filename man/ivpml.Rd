@@ -6,8 +6,6 @@
 \alias{model.matrix.ivpml}
 \alias{estfun.ivpml}
 \alias{bread.ivpml}
-\alias{AIC.ivpml}
-\alias{BIC.ivpml}
 \alias{vcov.ivpml}
 \alias{df.residual.ivpml}
 \alias{coef.ivpml}
@@ -27,10 +25,6 @@ ivpml(formula, data, messages = TRUE, ...)
 \method{estfun}{ivpml}(x, ...)
 
 \method{bread}{ivpml}(x, ...)
-
-\method{AIC}{ivpml}(object, k = 2, ...)
-
-\method{BIC}{ivpml}(object, ...)
 
 \method{vcov}{ivpml}(object, ...)
 
@@ -59,8 +53,6 @@ ivpml(formula, data, messages = TRUE, ...)
 
 \item{x, object}{an object of class \code{ivpml}.}
 
-\item{k}{a numeric value, use as penalty coefficient for number of parameters in the fitted model.}
-
 \item{eigentol}{the standard errors are only calculated if the ratio of the smallest and largest eigenvalue of the Hessian matrix is less than \code{eigentol}.  Otherwise the Hessian is treated as singular.}
 
 \item{digits}{the number of digits.}
@@ -74,6 +66,49 @@ ivpml(formula, data, messages = TRUE, ...)
 \description{
 Estimation of Probit model with one endogenous and continuous variable by Maximum Likelihood.
 }
+\details{
+The IV probit for cross-sectional data has the following structure:
+
+\deqn{
+y_{1i}^*  = x_i^\top\beta + \gamma y_{2i}+ \epsilon_i,
+}
+with
+\deqn{
+ y_{2i}  = z_i^\top\delta +  \upsilon_i,   
+}
+where \eqn{y_{1i}^*} is the latent (unobserved) dependent variable for individual \eqn{i = 1,...,N}; 
+\eqn{y_{2i}} is the endogenous continuous variable; \eqn{z_i} is the vector of exogenous variables 
+which also includes the instruments for \eqn{y_{2i}}; 
+and \eqn{(\epsilon, \upsilon)} are normal jointly distributed.
+
+The model is estimated using the \code{maxLik} function from \code{\link[maxLik]{maxLik}} package using 
+analytic gradient.
+}
+\examples{
+\donttest{ 
+# Data
+library("AER")
+data("PSID1976")
+PSID1976$lfp  <- as.numeric(PSID1976$participation == "yes")
+PSID1976$kids <- with(PSID1976, factor((youngkids + oldkids) > 0,
+                                      levels = c(FALSE, TRUE), 
+                                      labels = c("no", "yes")))
+                                      
+# IV probit model by MLE
+# (nwincome is endogenous and heducation is the additional instrument)
+PSID1976$nwincome <- with(PSID1976, (fincome - hours * wage)/1000)
+fiml.probit <- ivpml(lfp ~  education + experience + I(experience^2) + age + 
+                            youngkids + oldkids + nwincome |
+                            education + experience + I(experience^2) + age + 
+                            youngkids + oldkids + heducation, 
+                     data = PSID1976)
+summary(fiml.probit)
+}
+}
+\references{
+Greene, W. H. (2012). Econometric Analysis. 7 edition. Prentice Hall.
+}
 \author{
 Mauricio Sarrias.
 }
+\keyword{models}
