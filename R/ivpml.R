@@ -120,7 +120,7 @@ ivpml <- function(formula, data, messages = TRUE, ...){
   opt <- callT
   m   <- match(c("print.level", "ftol", "tol", "reltol",
                  "gradtol", "steptol", "lambdatol", "qrtol",
-                 "iterlim", "fixed", "activePar", "method", "control", "constraints"),
+                 "iterlim", "fixed", "activePar", "method", "control", "constraints", "gradient", "hessian"),
                names(opt), 0L)
   opt        <- opt[c(1L, m)]
   opt$start  <- start
@@ -516,13 +516,12 @@ mdydx.ivpml <- function(coeff, object, asf){
 
 #### Likelihood function ----
 #' @importFrom utils tail
-lnbinary_iv <- function(param, y1, y2, X, Z, gradient = TRUE){
+lnbinary_iv <- function(param, y1, y2, X, Z, gradient = TRUE, hessian = TRUE){
   # Likelihood function for binary Probit IV model with cross-sectional 
   #   data and one continuous endogenous variable
   F        <- pnorm
   f        <- dnorm
-  ff       <- function(x) -x * dnorm(x)
-  mills    <- function(x) f(x) / F(x)
+  #ff       <- function(x) -x * dnorm(x)
   K        <- ncol(X)
   P        <- ncol(Z)
   beta     <- param[1L:K]
@@ -534,19 +533,52 @@ lnbinary_iv <- function(param, y1, y2, X, Z, gradient = TRUE){
   index1   <- crossprod(t(X), beta)
   index2   <- crossprod(t(Z), delta)
   q        <- 2 * y1 - 1
-  ai       <- q * (index1 + (rho / sigma) * (y2 - index2)) / sqrt(1 - rho ^ 2)
+  ai       <- as.numeric(q * (index1 + (rho / sigma) * (y2 - index2)) / sqrt(1 - rho ^ 2))
   P1       <- F(ai)
-  bi       <- (y2 - index2) / sigma
+  bi       <- as.numeric((y2 - index2) / sigma)
   P2       <- (1 / sigma) * f(bi)
   Pi       <- pmax(P1 * P2, .Machine$double.eps)
   Li       <- log(Pi)
   
   if (gradient){
-    gb       <-  X * drop(mills(ai) * q  / sqrt(1 - rho ^ 2))
-    gd       <- -Z * drop(mills(ai) * q * (rho / sigma) / (sqrt(1 - rho ^ 2)) + (ff(bi) / f(bi)) * (1 / sigma))
-    glnsigma <- -(mills(ai) * q * rho / sqrt(1 - rho ^ 2) + (ff(bi) / f(bi))) * ((y2 - index2) * exp(-lnsigma)) - 1
-    gathrho  <- mills(ai) * q * (index1 * sinh(atanhrho) + (y2 - index2) * cosh(atanhrho) /sigma) 
+    m        <- function(x) f(x) / F(x)
+    gb       <-  X * (m(ai) * q  / sqrt(1 - rho^2))
+    gd       <-  Z * (- m(ai) * q * (rho / sigma) / sqrt(1 - rho^2) + (bi / sigma))
+    glnsigma <- -(m(ai) * q * rho / sqrt(1 - rho ^ 2)) * bi + bi^2 - 1
+    gathrho  <- m(ai) * q * (index1 * rho + bi) / sqrt(sech(atanhrho)^2) 
     attr(Li,'gradient') <- cbind(gb, gd, glnsigma, gathrho)
+  }
+  if (hessian){
+    h <- function(x) - x * m(x) - m(x)^2
+    H <- matrix(0, K + P + 2, K + P + 2)
+    cqr <- q / sqrt(1 - rho^2)
+    bb <- h(ai) * cqr^2
+    H[1:K, 1:K] <- crossprod(bb * X, X)
+    bd <- - h(ai) * cqr^2 * (rho / sigma)
+    H[1:K, (K + 1):(K + P)] <- crossprod(bd * X, Z)
+    bls <- -h(ai) * cqr^2 * rho * bi
+    H[1:K, (K + P + 1)] <- colSums(bls * X)
+    bt <- h(ai) * cqr * (q * (index1 * rho + bi) / sqrt(sech(atanhrho)^2))
+    H[1:K, (K + P + 2)] <- colSums(as.numeric(bt) * X)
+    H[(K + 1):(K + P), 1:K] <- t(H[1:K, (K + 1):(K + P)])
+    cqr2 <- q  * (rho / sigma) / sqrt(1 - rho^2)
+    dd <- h(ai) * cqr2^2 - (1 / sigma^2)
+    H[(K + 1):(K + P), (K + 1):(K + P)] <- crossprod(dd * Z, Z)
+    dls <- (bi / sigma)* (h(ai)* (q * rho / sqrt(1 - rho^2))^2 -2)      
+    H[(K + 1):(K + P), (K + P + 1)] <- colSums(dls * Z)
+    dt <- -h(ai) * cqr2 * (q * (index1 * rho + bi) / sqrt(sech(atanhrho)^2))
+    H[(K + 1):(K + P), (K + P + 2)] <- colSums(as.numeric(dt) * Z)
+    H[(K + P + 1), 1:K]<- t(H[1:K, (K + P + 1)])
+    H[(K + P + 1), (K + 1):(K + P)] <- t(H[(K + 1):(K + P), (K + P + 1)]) 
+    H[K + P  + 1, K + P + 1] <- sum(h(ai) * (q * rho * bi / sqrt(1 - rho^2))^2 + m(ai) * (q * rho * bi / sqrt(1 - rho^2)) - 2 * bi^2)
+    H[K + P  + 1, K + P + 2] <- sum(- bi * (h(ai) * (q * rho / sqrt(1 - rho^2)) *  (q * (index1 * rho + bi) / sqrt(sech(atanhrho)^2)) + m(ai) * (q / sqrt(sech(atanhrho)^2))))
+    H[K + P + 2, 1:K] <- t(H[1:K, (K + P + 2)])
+    H[K + P + 2, (K + 1):(K + P)] <- t(H[(K + 1):(K + P), (K + P + 2)])
+    H[K + P + 2, K + P + 1] <- H[K + P  + 1, K + P + 2]
+    H[K + P + 2, K + P + 2] <- sum(h(ai) * (q * (index1 * rho + bi) / sqrt(sech(atanhrho)^2))^2 + q * m(ai) * (index1 + bi * rho)/sqrt(sech(atanhrho)^2))
+    attr(Li, 'hessian') <- H
   }
   return(Li)
 }
+
+sech <- function(x) 1 / cosh(x)

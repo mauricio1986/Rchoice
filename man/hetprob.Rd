@@ -16,7 +16,7 @@
 \alias{predict.hetprob}
 \title{Estimate heteroskedastic binary (Probit or Logit) model.}
 \usage{
-hetprob(formula, data, link = c("probit", "logit"), Hes = TRUE, ...)
+hetprob(formula, data, link = c("probit", "logit"), ...)
 
 \method{terms}{hetprob}(x, ...)
 
@@ -48,8 +48,6 @@ hetprob(formula, data, link = c("probit", "logit"), Hes = TRUE, ...)
 \item{data}{the data of class \code{data.frame}.}
 
 \item{link}{the assumption of the distribution of the error term. It could be either \code{link = "probit"} or \code{link = "logit"}.}
-
-\item{Hes}{logical. Should the analytic Hessian to be used? \code{TRUE} as default.}
 
 \item{...}{arguments passed to \code{maxLik}.}
 

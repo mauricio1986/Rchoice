@@ -2,6 +2,15 @@
 \title{Rchoice News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.3-6}{
+\subsection{NEW FEATURES}{
+    \itemize{
+      \item Adding the Hessian to ivplm.
+      \item Fixing bug with the LR test in "hetprob()"
+    }
+  }  
+}
+
 \section{CHANGES IN VERSION 0.3-5}{
 \subsection{NEW FEATURES}{
     \itemize{

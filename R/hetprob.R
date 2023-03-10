@@ -7,7 +7,6 @@
 #' @param formula a symbolic description of the model of the form \code{y ~ x | z} where \code{y} is the binary dependent variable and \code{x} and \code{z} are regressors variables for the mean of the model and lnsigma.
 #' @param data the data of class \code{data.frame}.
 #' @param link the assumption of the distribution of the error term. It could be either \code{link = "probit"} or \code{link = "logit"}.
-#' @param Hes logical. Should the analytic Hessian to be used? \code{TRUE} as default.
 #' @param digits the number of digits.
 #' @param eigentol the standard errors are only calculated if the ratio of the smallest and largest eigenvalue of the Hessian matrix is less than \code{eigentol}.  Otherwise the Hessian is treated as singular. 
 #' @param newdata optionally, a data frame in which to look for variables with which to predict.
@@ -68,8 +67,8 @@
 #' @export
 hetprob <- function(formula, 
                     data, 
-                    link = c("probit", "logit"), 
-                    Hes  = TRUE, ...){
+                    link = c("probit", "logit"),
+                    ...){
   callT  <- match.call(expand.dots = TRUE)
   callF  <- match.call(expand.dots = FALSE)
   nframe <- length(sys.calls())
@@ -108,9 +107,10 @@ hetprob <- function(formula,
   #=============================-
   # 3. Initial values ----
   #=============================-
-  #aux1    <- glm(y ~ X - 1, data = mf, family = binomial(link))
-  aux1    <- glm.fit(X, y,  family = binomial(link))
-  logLik0 <- aux1$rank - aux1$aic/2
+  aux1    <- glm(y ~ X - 1, data = mf, family = binomial(link))
+  #aux1    <- glm.fit(X, y,  family = binomial(link))
+  #logLik0 <- aux1$rank - aux1$aic/2
+  logLik0 <- logLik(aux1)
   betas   <- coef(aux1)
   #aux2   <- lm(residuals(aux1) ~ Z - 1) 
   #gammas <- exp(coef(aux2))
@@ -125,13 +125,12 @@ hetprob <- function(formula,
   opt <- callT
   m   <- match(c("print.level", "ftol", "tol", "reltol",
                  "gradtol", "steptol", "lambdatol", "qrtol",
-                 "iterlim", "fixed", "activePar", "method", "control", "constraints"),
+                 "iterlim", "fixed", "activePar", "method", "control", "constraints", "gradient", "hessian"),
                names(opt), 0L)
   opt        <- opt[c(1L, m)]
   opt$start  <- theta
   opt[[1]]   <- as.name('maxLik')
   opt$logLik <- as.name('lnbinary_het')
-  opt$Hes    <- as.name('Hes')
   opt$link   <- as.name('link')
   opt[c('y', 'X', 'Z')] <- list(as.name('y'), as.name('X'), as.name('Z'))
   out <- eval(opt, sys.frame(which = nframe))
@@ -148,8 +147,9 @@ hetprob <- function(formula,
 }
 
 ## Log-likelihood function ====
-lnbinary_het <- function(theta, y, X, Z, 
-                         Hes =  TRUE, 
+lnbinary_het <- function(theta, y, X, Z,
+                         gradient = TRUE, 
+                         hessian =  TRUE, 
                          link = c("probit", "logit")){
   pfun <- switch(link,
                  "probit" = pnorm,
@@ -169,24 +169,26 @@ lnbinary_het <- function(theta, y, X, Z,
   ll    <- sum(log(pi))
   
   ## Gradient
-  mill  <- switch(link,
-                  "probit" = function(x) dfun(x) / pmax(pfun(x), .Machine$double.eps),
-                  "logit"  = function(x) 1 - pmax(pfun(x), .Machine$double.eps))
-  a_theta     <- drop(q * het) * cbind(X, as.vector(-index) * Z)
-  G           <- as.vector(mill(ai)) * a_theta
-  colnames(G) <- names(theta)
-  attr(ll,'gradient') <- G
-  
+  if (gradient){
+    m  <- switch(link,
+                 "probit" = function(x) dfun(x) / pmax(pfun(x), .Machine$double.eps),
+                 "logit"  = function(x) 1 - pmax(pfun(x), .Machine$double.eps))
+    g_theta     <- drop(q * het) * cbind(X, as.vector(-index) * Z)
+    G           <- as.vector(m(ai)) * g_theta
+    colnames(G) <- names(theta)
+    attr(ll,'gradient') <- G
+  }
+
   ## Hessian
-  if (Hes) {
+  if (hessian){
     h      <- switch(link,
-                     "probit" = function(x) -x * mill(x) - mill(x) ^ 2,
+                     "probit" = function(x) -x * m(x) - m(x) ^ 2,
                      "logit"  = function(x) -pfun(x) * (1 - pfun(x)))
-    Htemp <- matrix(0, K + J, K + J)
-    Htemp[1:K, -c(1:K)]   <- crossprod(as.vector(mill(ai) * q * het) * X, -Z)
-    Htemp[-(1:K), 1:K]    <- crossprod(as.vector(mill(ai) * q * het) * -Z, X)
-    Htemp[-(1:K), -(1:K)] <- crossprod(as.vector(mill(ai) * q * index * het) * Z, Z)
-    H <- crossprod(as.vector(h(ai)) * a_theta, a_theta) + Htemp
+    mH <- matrix(0, K + J, K + J)
+    mH[1:K, -c(1:K)]   <- crossprod(as.vector(m(ai) * q * het) * X, -Z)
+    mH[-(1:K), 1:K]    <- crossprod(as.vector(m(ai) * q * het) * -Z, X)
+    mH[-(1:K), -(1:K)] <- crossprod(as.vector(m(ai) * q * index * het) * Z, Z)
+    H <- crossprod(as.vector(h(ai)) * g_theta, g_theta) + mH
     attr(ll,'hessian') <- H
   }
   return(ll)
